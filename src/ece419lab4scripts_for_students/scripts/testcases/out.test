@@ -1,0 +1,4 @@
+inject.classname=org/apache/zookeeper/ClientCnxn
+inject.method=submitRequest
+inject.signature=(Lorg/apache/zookeeper/proto/RequestHeader;Lorg/apache/jute/Record;Lorg/apache/jute/Record;Lorg/apache/zookeeper/ZooKeeper$WatchRegistration;)Lorg/apache/zookeeper/proto/ReplyHeader;
+inject.failure.threshold=25
