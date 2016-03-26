@@ -1,29 +1,23 @@
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.Watcher.Event.KeeperState;
-import org.apache.zookeeper.ZooKeeper;
-import org.apache.zookeeper.ZooKeeper.States;
-import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.ZooDefs.Ids;
+import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Stat;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.List;
 import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
-public class ZkConnector implements Watcher {
-
-    // ZooKeeper Object
+/**
+ * Created by herbert on 2016-03-24.
+ */
+public class ZooKeeperConnector implements Watcher {
     ZooKeeper zooKeeper;
 
     // To block any operation until ZooKeeper is connected. It's initialized
     // with count 1, that is, ZooKeeper connect state.
     CountDownLatch connectedSignal = new CountDownLatch(1);
 
-    // ACL, set to Completely Open
-    protected static final List<ACL> acl = Ids.OPEN_ACL_UNSAFE;
+    // Access Control List, set to Completely Open
+    protected static final List<ACL> acl = ZooDefs.Ids.OPEN_ACL_UNSAFE;
 
     /**
      * Connects to ZooKeeper servers specified by hosts.
@@ -34,14 +28,14 @@ public class ZkConnector implements Watcher {
                 hosts, // ZooKeeper service hosts
                 5000,  // Session timeout in milliseconds
                 this); // watcher - see process method for callbacks
-	    connectedSignal.await();
+        connectedSignal.await();
     }
 
     /**
      * Closes connection with ZooKeeper
      */
     public void close() throws InterruptedException {
-	    zooKeeper.close();
+        zooKeeper.close();
     }
 
     /**
@@ -49,8 +43,8 @@ public class ZkConnector implements Watcher {
      */
     public ZooKeeper getZooKeeper() {
         // Verify ZooKeeper's validity
-        if (null == zooKeeper || !zooKeeper.getState().equals(States.CONNECTED)) {
-	        throw new IllegalStateException ("ZooKeeper is not connected.");
+        if (null == zooKeeper || !zooKeeper.getState().equals(ZooKeeper.States.CONNECTED)) {
+            throw new IllegalStateException ("ZooKeeper is not connected.");
         }
         return zooKeeper;
     }
@@ -84,11 +78,11 @@ public class ZkConnector implements Watcher {
         return KeeperException.Code.OK;
     }
 
+    @Override
     public void process(WatchedEvent event) {
         // release lock if ZooKeeper is connected.
-        if (event.getState() == KeeperState.SyncConnected) {
+        if (event.getState() == Event.KeeperState.SyncConnected) {
             connectedSignal.countDown();
         }
     }
 }
-
