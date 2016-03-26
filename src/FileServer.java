@@ -45,7 +45,7 @@ public class FileServer {
         Stat stat = zooKeeperConnector.exists(myPath, watcher);
 
         if (stat == null) {              // znode doesn't exist; let's try creating it
-            System.out.println("Creating " + myPath);
+            System.out.println("Creating fileserver at: " + myPath);
             KeeperException.Code ret = zooKeeperConnector.create(
                     myPath,         // Path of znode
                     selfAddress+":"+ selfPort,           // Data not needed.
