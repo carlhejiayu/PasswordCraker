@@ -166,7 +166,7 @@ class requestHandlingThread extends Thread{
             boolean isNumerator = true;
             for(int i = 0; i < len; i++){
                 if(isNumerator) {
-                    if (requestfile.charAt(i) != '-') {
+                    if (requestfile.charAt(i) != ':') {
                         stringBuilder.append(requestfile.charAt(i));
                     } else{
                         isNumerator = false;
