@@ -1,8 +1,8 @@
+import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.math.BigInteger;
 
-public class MD5Test {
+public class MD5Hash {
 
     public static void main(String[] args){
         

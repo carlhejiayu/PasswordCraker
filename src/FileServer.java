@@ -45,7 +45,7 @@ public class FileServer {
         Stat stat = zooKeeperConnector.exists(myPath, watcher);
 
         if (stat == null) {              // znode doesn't exist; let's try creating it
-            System.out.println("Creating " + myPath);
+            System.out.println("Creating fileserver at: " + myPath);
             KeeperException.Code ret = zooKeeperConnector.create(
                     myPath,         // Path of znode
                     selfAddress+":"+ selfPort,           // Data not needed.
@@ -166,7 +166,7 @@ class requestHandlingThread extends Thread{
             boolean isNumerator = true;
             for(int i = 0; i < len; i++){
                 if(isNumerator) {
-                    if (requestfile.charAt(i) != '-') {
+                    if (requestfile.charAt(i) != ':') {
                         stringBuilder.append(requestfile.charAt(i));
                     } else{
                         isNumerator = false;
