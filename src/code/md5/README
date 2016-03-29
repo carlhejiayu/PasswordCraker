@@ -1,5 +1,5 @@
 
-1. MD5Test.java contains a sample method, getHash, to retrieve the MD5 hash from a given word (r41nb0w is the hardcoded word value in the code)
+1. MD5Test2.java contains a sample method, getHash, to retrieve the MD5 hash from a given word (r41nb0w is the hardcoded word value in the code)
 
 You can also verify by issuing the following command in your shell:
 

@@ -1,28 +1,139 @@
-import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
 
+import java.io.*;
+import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by herbert on 2016-03-26.
  */
-public class Worker {
+public class Worker extends Thread{
     static CountDownLatch nodeCreateSignal = new CountDownLatch(1);
     ZooKeeperConnector zooKeeperConnector;
     String workerGroupPath = "/workersGroup";
     String myPath = "/worker";
+    String taskQueue = "/taskWaitingQueue";
+    String processQueue = "/taskProcessQueue";
+    IpAddress fileServerAddress;
+    AtomicBoolean fileServerOk;
+    String zookeeperHost;
+    ZookeeperQueue taskwaitingqueue;
+    ZookeeperQueue taskProcessQueue;
+    String myActualPath;
+
+
+    public static void main(String[] args) {
+        String zkHost = args[0];
+        Worker worker = new Worker(zkHost);
+        worker.checkpath();
+        worker.createSelfNode();
+        worker.getFileServerAddress();
+        worker.start();
+
+    }
+
+    @Override
+    public void run() {
+        while (true){
+            if(fileServerOk.get()){
+                getTask();
+            }
+        }
+    }
+
+
+    public Worker(String zookeeperHost) {
+        this.zookeeperHost = zookeeperHost;
+        zooKeeperConnector = new ZooKeeperConnector();
+        //connect to zookeeper
+        try {
+            zooKeeperConnector.connect(zookeeperHost);
+        } catch(Exception e) {
+            System.out.println("Zookeeper connect "+ e.getMessage());
+        }
+        fileServerOk = new AtomicBoolean(false);
+        taskwaitingqueue = new ZookeeperQueue(taskQueue, zooKeeperConnector);
+        //taskwaitingqueue.tryCreate();
+        taskProcessQueue = new ZookeeperQueue(processQueue, zooKeeperConnector);
+        //taskProcessQueue.tryCreate();
+    }
+    public void doTask(String hashword, List<String> dictionary){
+        for(String word : dictionary){
+            String hash = MD5Hash.getHash(word);
+            if(hash.equals(hashword)){
+                //success
+                report(word, hashword, true);
+                return;
+            }
+        }
+        report("notFound", hashword, false);
+    }
+
+    public void report(String answer, String task, boolean success){
+        ZookeeperQueue reportQueue = null;
+        if (success) {
+            reportQueue = new ZookeeperQueue("/jobs/" + task + "/success", zooKeeperConnector);
+        }
+        else {
+            reportQueue = new ZookeeperQueue("/jobs/" + task + "/notFound", zooKeeperConnector);
+        }
+        try {
+            reportQueue.insert(answer);
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void getTask(){
+        String task = taskwaitingqueue.pop();
+        try {
+            taskProcessQueue.insert(myActualPath + "=" + task);
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        String[] tasks = task.split("-");
+        String hashword = tasks[0];
+        String partitionId = tasks[1];
+        List dict = getFileFromFileServer(partitionId);
+        doTask(hashword, dict);
+        taskProcessQueue.delete(task);
+    }
+
+    public List getFileFromFileServer(String partition){
+        try {
+            Socket socket = new Socket(fileServerAddress.Ip, fileServerAddress.port);
+            ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
+            DataOutputStream output = new DataOutputStream(socket.getOutputStream());
+            output.writeBytes(partition + "/r/n");
+            return (List) input.readObject();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Error: didn't get the dictionary");
+        return null;
+    }
 
     public void createSelfNode(){
-        KeeperException.Code ret = zooKeeperConnector.create(
+        String actualpath = zooKeeperConnector.createReturnPath(
                 workerGroupPath + myPath,         // Path of znode
                 null,           // Data not needed.
                 CreateMode.EPHEMERAL_SEQUENTIAL   // Znode type, set to EPHEMERAL SEQUENTIAL.
         );
-        if (ret == KeeperException.Code.OK) System.out.println("create the worker!");
+
+        System.out.println("create the worker! : " + actualpath);
+        myActualPath = actualpath;
+
     }
     private void checkpath() {
         Stat stat = zooKeeperConnector.exists(workerGroupPath, null);
@@ -37,6 +148,7 @@ public class Worker {
             if (ret == KeeperException.Code.OK) System.out.println("create the workersGroup!");
         }
     }
+
     private void getFileServerAddress(){
         Stat stat = zooKeeperConnector.exists("/fileServer", new Watcher() {
             @Override
@@ -46,6 +158,7 @@ public class Worker {
                 Event.EventType type = event.getType();
                 if(type == Event.EventType.NodeDeleted ){
                     System.out.println("file server crash, waiting for new file server");
+                    fileServerOk.set(false);
                     getFileServerAddress();
                 }
                 if(type == Event.EventType.NodeCreated){
@@ -65,14 +178,13 @@ public class Worker {
                 String address = stringBuilder.toString();
                 System.out.println("address is: " + address);
                 IpAddress ipAddress = IpAddress.parseAddressString(address);
-
-
+                fileServerAddress = ipAddress;
+                fileServerOk.set(true);
             } catch (KeeperException e) {
                 e.printStackTrace();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-
     }
 }

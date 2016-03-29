@@ -78,6 +78,23 @@ public class ZooKeeperConnector implements Watcher {
         return KeeperException.Code.OK;
     }
 
+    protected String createReturnPath(String path, String data, CreateMode mode) {
+
+        try {
+            byte[] byteData = null;
+            if(data != null) {
+                byteData = data.getBytes();
+            }
+            String actualpath = zooKeeper.create(path, byteData, acl, mode);
+            return actualpath;
+
+        } catch(KeeperException e) {
+            return null;
+        } catch(Exception e) {
+            return null;
+        }
+    }
+
     @Override
     public void process(WatchedEvent event) {
         // release lock if ZooKeeper is connected.
