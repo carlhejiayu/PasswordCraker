@@ -1,0 +1,39 @@
+<component name="libraryTable">
+  <library name="zookeeper">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/src/zookeeper" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="file://$PROJECT_DIR$/src/zookeeper/docs/api" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/src/zookeeper/contrib/ZooInspector/src/java" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/contrib/bookkeeper/benchmark" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/contrib/bookkeeper/src/java" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/contrib/bookkeeper/test" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/contrib/fatjar/src/java" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/recipes/lock/src/java" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/recipes/lock/test" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/recipes/queue/src/java" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/recipes/queue/test" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/src/contrib/bookkeeper/benchmark" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/src/contrib/bookkeeper/src/java" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/src/contrib/bookkeeper/test" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/src/contrib/fatjar/src/java" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/src/contrib/rest/src/java" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/src/contrib/rest/src/test" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/src/contrib/zooinspector/src/java" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/src/java/generated" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/src/java/main" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/src/java/systest" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/src/java/test" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/src/recipes/lock/src/java" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/src/recipes/lock/test" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/src/recipes/queue/src/java" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper/src/recipes/queue/test" />
+      <root url="file://$PROJECT_DIR$/src/zookeeper" />
+    </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/src/zookeeper" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/src/zookeeper" recursive="false" type="SOURCES" />
+  </library>
+</component>
