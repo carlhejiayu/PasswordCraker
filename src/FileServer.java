@@ -25,8 +25,8 @@ public class FileServer {
     int selfPort;
     String selfAddress;
     public static void main(String[] args){
-        if (args.length != 1) {
-            System.out.println("Usage: java -classpath lib/zookeeper-3.3.2.jar:lib/log4j-1.2.15.jar:. Test zkServer:clientPort");
+        if (args.length != 2) {
+            System.out.println("Usage: java -classpath lib/zookeeper-3.3.2.jar:lib/log4j-1.2.15.jar:. Test zkServer:clientPort selfport");
             return;
         }
 
@@ -108,7 +108,7 @@ public class FileServer {
             e.printStackTrace();
         }
 
-        FileServer fileServer = this;
+        final FileServer fileServer = this;
 
         new Thread(new Runnable() {
             @Override
