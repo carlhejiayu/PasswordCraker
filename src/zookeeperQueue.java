@@ -101,6 +101,16 @@ public class ZookeeperQueue {
         }
     }
 
+    public void deletePath(String path){
+        try {
+            zooKeeperConnector.getZooKeeper().delete(path, 0);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public String pop() {
         String retvalue = null;
