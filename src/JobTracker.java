@@ -200,7 +200,7 @@ class jobRequestHandlingThread extends Thread{
                 String client  = jobi[1];
                 int notFoundNumber = zkc.getZooKeeper().getChildren(jobpath+"/notFound", null).size();
                 int successNumber  = zkc.getZooKeeper().getChildren(jobpath+"/success", null).size();
-                if (Task_Number == notFoundNumber + successNumber && client==ClientName){
+                if (Task_Number == notFoundNumber + successNumber && client.equals(ClientName)){
                     //Now we can respond to the right client
                     String message = "";
                     if (successNumber == 1){
@@ -282,8 +282,12 @@ class jobRequestHandlingThread extends Thread{
 
                 }
                 else{
-                    //reset watcher??
-
+                    //reset watcher when the jobs are not finished
+                    try {
+                        zkc.getZooKeeper().getChildren("/workersGroup", workerwatcher);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
             catch (Exception e){
@@ -330,7 +334,12 @@ class jobRequestHandlingThread extends Thread{
                     objectOutputStream.writeObject("Job finished & the password:" + password+"\r\n");
                 }
                 else{
-                    //reset watcher??
+                    //reset watchwer because the jobs are not finshed yet
+                    try {
+                        zkc.getZooKeeper().getChildren(jobpath, workerwatcher);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
 
                 }
             }
@@ -397,7 +406,8 @@ class jobRequestHandlingThread extends Thread{
                 String requestword = r[0];
                 String client = r[1];
 
-                if (requestword == "connect") {
+
+                if (requestword.equals( "connect")) {
                     ClientName = client;
                     checkJobState();
                 } else {
