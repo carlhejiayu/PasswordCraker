@@ -19,7 +19,7 @@ public class ZookeeperQueue {
 
     }
 
-    public void tryCreate(){
+    public void tryCreate() {
         // Create ZK node name
         if (zooKeeperConnector != null) {
             Stat s = zooKeeperConnector.exists(queueName, null);
@@ -36,7 +36,7 @@ public class ZookeeperQueue {
         return true;
     }
 
-    public void delete(String data){
+    public void delete(String data) {
         Stat stat = null;
 
         // Get the first element available
@@ -76,7 +76,7 @@ public class ZookeeperQueue {
                         e.printStackTrace();
                     }
 
-                    if(d.equals(data)) {
+                    if (d.equals(data)) {
                         todelete = tempValue;
                         break;
                     }
@@ -100,7 +100,7 @@ public class ZookeeperQueue {
         }
     }
 
-    public void deletePath(String path){
+    public void deletePath(String path) {
         try {
             zooKeeperConnector.getZooKeeper().delete(path, 0);
         } catch (InterruptedException e) {
@@ -116,65 +116,61 @@ public class ZookeeperQueue {
         Stat stat = null;
 
         // Get the first element available
-        while (true) {
 
-            ArrayList<String> list = null;
+
+        ArrayList<String> list = null;
+        try {
+            list = (ArrayList<String>)
+                    zooKeeperConnector.getZooKeeper().getChildren(queueName, new Watcher() {
+                        @Override
+                        public void process(WatchedEvent event) {
+                            countDownLatch.countDown();
+                        }
+                    });
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (list.isEmpty()) {
+            System.out.println(queueName + " queue is empty. Going to wait");
+            countDownLatch = new CountDownLatch(1);
             try {
-                list = (ArrayList<String>)
-                        zooKeeperConnector.getZooKeeper().getChildren(queueName, new Watcher() {
-                            @Override
-                            public void process(WatchedEvent event) {
-                                countDownLatch.countDown();
-                            }
-                        });
-            } catch (KeeperException e) {
-                e.printStackTrace();
+                countDownLatch.await();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if (list.isEmpty()) {
-                System.out.println(queueName + " queue is empty. Going to wait");
-                countDownLatch = new CountDownLatch(1);
-                try {
-                    countDownLatch.await();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                Integer min = new Integer(list.get(0).substring(7));
-                for (String s : list) {
-                    Integer tempValue = new Integer(s.substring(7));
-                    if (tempValue < min) min = tempValue;
-                }
-                System.out.println("Temporary value: " + queueName + "/element" + min);
-                byte[] b = new byte[0];
-                try {
-                    b = zooKeeperConnector.getZooKeeper().getData(queueName + "/element" + min, false, stat);
-                } catch (KeeperException e) {
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        }
+        Integer min = new Integer(list.get(0).substring(7));
+        for (String s : list) {
+            Integer tempValue = new Integer(s.substring(7));
+            if (tempValue < min) min = tempValue;
+        }
+        System.out.println("Temporary value: " + queueName + "/element" + min);
+        byte[] b = new byte[0];
+        try {
+            b = zooKeeperConnector.getZooKeeper().getData(queueName + "/element" + min, null, stat);
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-                try {
-                    zooKeeperConnector.getZooKeeper().delete(queueName + "/element" + min, 0);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (KeeperException e) {
-                    //cannot delete because other has delete it
-                    //has to retry !!!!!!!!!!
-                    System.out.println("delete fail and try to pop again");
-                    return pop();
-                    //e.printStackTrace();
-                }
-
-                retvalue = new String(b);
-
-                return retvalue;
-            }
+        try {
+            zooKeeperConnector.getZooKeeper().delete(queueName + "/element" + min, 0);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (KeeperException e) {
+            //cannot delete because other has delete it
+            //has to retry !!!!!!!!!!
+            e.printStackTrace();
+            System.out.println("delete fail and try to pop again");
+            return pop();
 
         }
+
+        retvalue = new String(b);
+
+        return retvalue;
     }
-
-
 }
