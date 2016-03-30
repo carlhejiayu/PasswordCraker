@@ -87,9 +87,9 @@ public class Client {
             try {
                 byte[] b = zooKeeperConnector.getZooKeeper().getData("/JobTracker", null, stat);
                 //ByteBuffer buffer = ByteBuffer.wrap(b);
-                StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append(b);
-                String address = stringBuilder.toString();
+
+                String address = new String(b);
+
                 System.out.println("address is: " + address);
                 IpAddress ipAddress = IpAddress.parseAddressString(address);
                 jobTrackerAddress = ipAddress;
