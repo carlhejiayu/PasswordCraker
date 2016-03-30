@@ -115,7 +115,7 @@ public class Worker extends Thread{
             Socket socket = new Socket(fileServerAddress.Ip, fileServerAddress.port);
             ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
             DataOutputStream output = new DataOutputStream(socket.getOutputStream());
-            output.writeBytes(partition + "/r/n");
+            output.writeBytes(partition + "\r\n");
             return (List) input.readObject();
         } catch (IOException e) {
             e.printStackTrace();
