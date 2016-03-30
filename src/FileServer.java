@@ -176,6 +176,8 @@ class requestHandlingThread extends Thread{
                 //the last one take all from the start of index to last
                 partition = fileServer.dictionary.subList((numerator-1)*partitionSize, fileServer.dictionarySize);
             }
+            partition = new ArrayList<>(partition);
+            System.out.println("size of partition sent: " + partition.size());
             objectOutputStream.writeObject(partition);
 
         } catch (IOException e) {
