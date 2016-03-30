@@ -193,7 +193,8 @@ class jobRequestHandlingThread extends Thread{
         //we need to check whether some of the jobs have been finished during the time when it is crashed and restablish a new primary job Tracker
         try {
             List <String> alljobs = zkc.getZooKeeper().getChildren("/jobs",null);
-            for (String jobpath: alljobs){
+            for (String jobname: alljobs){
+                String jobpath = "/jobs/" + jobname ;
                 String jobinfo = new String(zkc.getZooKeeper().getData(jobpath,null,null));
                 String [] jobi = jobinfo.split("-");
                 int Task_Number = Integer.parseInt(jobi[0]);
@@ -229,6 +230,12 @@ class jobRequestHandlingThread extends Thread{
         //we only look for the one
         try {
             List <String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessQueue",null);
+            List <String> allworkers = zkc.getZooKeeper().getChildren("/workersGroup",null);
+            for (String Tasks : allProcessingTasks){
+
+            }
+
+
 
         } catch (KeeperException e) {
             e.printStackTrace();
@@ -261,6 +268,7 @@ class jobRequestHandlingThread extends Thread{
 
     private void failTasksHandleEvent(WatchedEvent event){
         String path = event.getPath();
+        System.out.println("I recieved a not found message of path:" +path);
         String pattern = "/notFound";
         Pattern r = Pattern.compile(pattern);
         // Now create matcher object.
@@ -296,7 +304,7 @@ class jobRequestHandlingThread extends Thread{
                 else{
                     //reset watcher when the jobs are not finished
                     try {
-                        zkc.getZooKeeper().getChildren("/workersGroup", workerwatcher);
+                        zkc.getZooKeeper().getChildren(path, workerwatcher);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -309,7 +317,7 @@ class jobRequestHandlingThread extends Thread{
         else {
             // reset watcher if something bad happens
             try {
-                zkc.getZooKeeper().getChildren("/workersGroup", workerwatcher);
+                zkc.getZooKeeper().getChildren(path, failwatcher);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -320,6 +328,7 @@ class jobRequestHandlingThread extends Thread{
     private  void successTaskHandleEvent(WatchedEvent event){
         /*Need to check whether the total number of succeess and failure is equal to the job info*/
         String path = event.getPath();
+        System.out.println("I recieved a success message of path:" +path);
         String pattern = "/success";
         Pattern r = Pattern.compile(pattern);
         // Now create matcher object.
@@ -348,7 +357,7 @@ class jobRequestHandlingThread extends Thread{
                 else{
                     //reset watchwer because the jobs are not finshed yet
                     try {
-                        zkc.getZooKeeper().getChildren(jobpath, workerwatcher);
+                        zkc.getZooKeeper().getChildren(path, successwatcher);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -362,7 +371,7 @@ class jobRequestHandlingThread extends Thread{
         else {
             // reset watcher if something else happen
             try {
-                zkc.getZooKeeper().getChildren("/workersGroup", workerwatcher);
+                zkc.getZooKeeper().getChildren(path, successwatcher);
             } catch (Exception e) {
                 e.printStackTrace();
             }
