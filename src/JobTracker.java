@@ -10,6 +10,7 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
@@ -26,6 +27,8 @@ public class JobTracker {
     ZookeeperQueue taskWaitingQueue;
     ZookeeperQueue taskProcessingQueue;
     ServerSocket serverSocket;
+    String selfAddress;
+    int selfport;
 
 
     public static void main(String[] args) {
@@ -37,11 +40,6 @@ public class JobTracker {
 
         JobTracker t = new JobTracker(args[0], Integer.parseInt(args[1]));
 
-        System.out.println("Sleeping...");
-        try {
-            Thread.sleep(5000);
-        } catch (Exception e) {}
-
         t.checkpath();
 
         System.out.println("Sleeping...");
@@ -52,6 +50,12 @@ public class JobTracker {
 
     public JobTracker(String hosts,int selfport) {
         zkc = new ZooKeeperConnector();
+        this.selfport = selfport;
+        try {
+            this.selfAddress = InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
         try {
             zkc.connect(hosts);
         } catch(Exception e) {
@@ -82,7 +86,7 @@ public class JobTracker {
             System.out.println("Creating " + root);
             KeeperException.Code ret = zkc.create(
                     root,         // Path of znode
-                    null,           // Data not needed.
+                    selfAddress+":"+selfport,           // Data not needed.
                     CreateMode.EPHEMERAL   // Znode type, set to EPHEMERAL.
             );
             if (ret == KeeperException.Code.OK) System.out.println("the boss!");
@@ -108,7 +112,7 @@ public class JobTracker {
         if (jobrootsta == null){
             System.out.println("Creating " + jobsRoot);
             KeeperException.Code ret = zkc.create(
-                    root,         // Path of znode
+                    jobsRoot,         // Path of znode
                     null,           // Data not needed.
                     CreateMode.PERSISTENT   // Znode type, set to EPHEMERAL.
             );
@@ -258,9 +262,7 @@ class jobRequestHandlingThread extends Thread{
         if (type == Watcher.Event.EventType.NodeCreated){
             try {
                 //now we look for the the number of notFound case
-                StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append(zkc.getZooKeeper().getData(jobpath, null, null));
-                String jobdata = stringBuilder.toString();
+                String jobdata = new String (zkc.getZooKeeper().getData(jobpath, null, null));
                 String []jdata = jobdata.split("-");
                 int Task_number = Integer.parseInt(jdata[0]);
                 String client = jdata[1];
@@ -314,9 +316,7 @@ class jobRequestHandlingThread extends Thread{
         Watcher.Event.EventType type = event.getType();
         if (type == Watcher.Event.EventType.NodeCreated){
             try {
-                StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append(zkc.getZooKeeper().getData(jobpath, null, null));
-                String jobdata = stringBuilder.toString();
+                String jobdata = new String (zkc.getZooKeeper().getData(jobpath, null, null));
                 String []jdata = jobdata.split("-");
                 int Task_number = Integer.parseInt(jdata[0]);
                 String client = jdata[1];
