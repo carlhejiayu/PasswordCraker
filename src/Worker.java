@@ -16,8 +16,8 @@ public class Worker extends Thread{
     ZooKeeperConnector zooKeeperConnector;
     String workerGroupPath = "/workersGroup";
     String myPath = "/worker";
-    String taskQueue = "/taskWaitingQueue";
-    String processQueue = "/taskProcessQueue";
+    String taskQueue = "taskWaitingQueue";
+    String processQueue = "taskProcessQueue";
     IpAddress fileServerAddress;
     AtomicBoolean fileServerOk;
     String zookeeperHost;
