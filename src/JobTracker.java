@@ -386,10 +386,10 @@ class jobRequestHandlingThread extends Thread{
     public void run() {
         while (true){
             try {
-
                 objectOutputStream = new ObjectOutputStream(requestSocket.getOutputStream());
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(requestSocket.getInputStream()));
                 String request = bufferedReader.readLine();
+                System.out.println(request);
 
                 String r[] = request.split("-");
                 String requestword = r[0];
