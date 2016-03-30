@@ -223,6 +223,18 @@ class jobRequestHandlingThread extends Thread{
             e.printStackTrace();
         }
 
+    }
+
+    private void checkTaskProcessingQueue(){
+        //we only look for the one
+        try {
+            List <String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessingQueue",null);
+
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -367,8 +379,8 @@ class jobRequestHandlingThread extends Thread{
             //One worker fails
             try {
                 List<String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessingQueue", null);
-                for (String eachpath: allProcessingTasks){
-                    String[] s =  eachpath.split("=");
+                for (String eachworker: allProcessingTasks){
+                    String[] s =  eachworker.split("=");
                     String workerpath  = s[0];
                     if (workerpath == failpath){
                         taskProcessingQueue.deletePath(workerpath);
@@ -441,7 +453,7 @@ class jobRequestHandlingThread extends Thread{
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (Exception e) {
-                System.out.println("Not succesffully get the number of worker");
+                e.printStackTrace();
             }
 
         }
