@@ -141,15 +141,17 @@ public class ZookeeperQueue {
                 e.printStackTrace();
             }
         }
-        Integer min = new Integer(list.get(0).substring(7));
-        for (String s : list) {
+        //Integer min = new Integer(list.get(0).substring(7));
+        /*for (String s : list) {
             Integer tempValue = new Integer(s.substring(7));
             if (tempValue < min) min = tempValue;
-        }
-        System.out.println("Temporary value: " + queueName + "/element" + min);
+        }*/
+        //System.out.println("Temporary value: " + queueName + "/element" + min);
+        String firstChild = list.get(0);
+        System.out.println("firstChild is " + firstChild);
         byte[] b = new byte[0];
         try {
-            b = zooKeeperConnector.getZooKeeper().getData(queueName + "/element" + min, null, stat);
+            b = zooKeeperConnector.getZooKeeper().getData(queueName + "/"+firstChild, null, stat);
         } catch (KeeperException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -157,7 +159,7 @@ public class ZookeeperQueue {
         }
 
         try {
-            zooKeeperConnector.getZooKeeper().delete(queueName + "/element" + min, 0);
+            zooKeeperConnector.getZooKeeper().delete(queueName + "/" + firstChild, 0);
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (KeeperException e) {
