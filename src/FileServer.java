@@ -116,7 +116,7 @@ public class FileServer {
             public void run() {
                 while (true){
                     try {
-                        new requestHandlingThread(serverSocket.accept(), fileServer);
+                        new requestHandlingThread(serverSocket.accept(), fileServer).start();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

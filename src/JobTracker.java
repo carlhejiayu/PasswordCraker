@@ -98,7 +98,7 @@ public class JobTracker {
                 public void run() {
                     while (true){
                         try {
-                            new jobRequestHandlingThread(serverSocket.accept(), zkc, taskWaitingQueue,  taskProcessingQueue);
+                            new jobRequestHandlingThread(serverSocket.accept(), zkc, taskWaitingQueue,  taskProcessingQueue).start();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
