@@ -384,54 +384,54 @@ class jobRequestHandlingThread extends Thread{
 
     @Override
     public void run() {
-        try {
+        while (true){
+            try {
+                objectOutputStream = new ObjectOutputStream(requestSocket.getOutputStream());
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(requestSocket.getInputStream()));
+                String request = bufferedReader.readLine();
+                System.out.println(request);
 
-            objectOutputStream = new ObjectOutputStream(requestSocket.getOutputStream());
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(requestSocket.getInputStream()));
-            String request = bufferedReader.readLine();
+                String r[] = request.split("-");
+                String requestword = r[0];
+                String client = r[1];
 
-            String r[] = request.split("-");
-            String requestword = r[0];
-            String client = r[1];
-
-            if (requestword == "Connect") {
-                ClientName = client;
-                checkJobState();
-            } else {
-                //Now we need to create a node for a job that request to crack the word , 'requestword'
-                String path = "/jobs/" + requestword;
-                //Stat stat = zkc.exists(path, jobswatcher);
+                if (requestword == "Connect") {
+                    ClientName = client;
+                    checkJobState();
+                } else {
+                    //Now we need to create a node for a job that request to crack the word , 'requestword'
+                    String path = "/jobs/" + requestword;
+                    //Stat stat = zkc.exists(path, jobswatcher);
 
 
-                // get the number of worker
-                List workers = zkc.getZooKeeper().getChildren("/workersGroup", true);
-                int worker_number = workers.size();
-                String jobInfo = String.valueOf(worker_number) + "-" + client;
-                //if (stat == null) {              // znode doesn't exist; let's try creating it
-                System.out.println("Creating the job of the word: " + requestword);
-                KeeperException.Code ret = zkc.create(
-                        path,         // Path of znode
-                        jobInfo,           // Data not needed.
-                        CreateMode.PERSISTENT   // Znode type, set to EPHEMERAL.
-                );
-                // }
-                String successpath = path + "/success";
-                String failpath = path + "/notFound";
-                zkc.create(successpath, null, CreateMode.PERSISTENT);
-                zkc.create(failpath, null, CreateMode.PERSISTENT);
-                zkc.getZooKeeper().getChildren(successpath, successwatcher);
-                zkc.getZooKeeper().getChildren(failpath, failwatcher);
+                    // get the number of worker
+                    List workers = zkc.getZooKeeper().getChildren("/workersGroup", true);
+                    int worker_number = workers.size();
+                    String jobInfo = String.valueOf(worker_number) + "-" + client;
+                    //if (stat == null) {              // znode doesn't exist; let's try creating it
+                    System.out.println("Creating the job of the word: " + requestword);
+                    KeeperException.Code ret = zkc.create(
+                            path,         // Path of znode
+                            jobInfo,           // Data not needed.
+                            CreateMode.PERSISTENT   // Znode type, set to EPHEMERAL.
+                    );
+                    // }
+                    String successpath = path + "/success";
+                    String failpath = path + "/notFound";
+                    zkc.create(successpath, null, CreateMode.PERSISTENT);
+                    zkc.create(failpath, null, CreateMode.PERSISTENT);
+                    zkc.getZooKeeper().getChildren(successpath, successwatcher);
+                    zkc.getZooKeeper().getChildren(failpath, failwatcher);
 
-                // Now we need to split the jobs and push the tasks into the Queue
-                splitJobs(requestword, worker_number);
+                    // Now we need to split the jobs and push the tasks into the Queue
+                    splitJobs(requestword, worker_number);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                System.out.println("Not succesffully get the number of worker");
             }
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        catch(Exception e){
-            System.out.println("Not succesffully get the number of worker");
-        }
 
+        }
     }
 }
