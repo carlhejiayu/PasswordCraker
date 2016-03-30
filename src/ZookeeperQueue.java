@@ -136,7 +136,7 @@ public class ZookeeperQueue {
                 System.out.println("Going to wait");
                 countDownLatch = new CountDownLatch(1);
                 try {
-                    countDownLatch.wait();
+                    countDownLatch.await();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
