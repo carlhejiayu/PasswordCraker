@@ -1,3 +1,4 @@
+import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
@@ -5,6 +6,7 @@ import org.apache.zookeeper.data.Stat;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -16,6 +18,10 @@ public class Client {
     ZooKeeperConnector zooKeeperConnector;
     AtomicBoolean jobTrackerOk;
     IpAddress jobTrackerAddress;
+    BufferedReader input;
+    DataOutputStream output;
+    Socket socket;
+    String selfname;
     public Client(String zookeeperHost) {
         jobTrackerOk = new AtomicBoolean(false);
         zooKeeperConnector = new ZooKeeperConnector();
@@ -38,9 +44,11 @@ public class Client {
 
 
             String password = scanner.nextLine();
+            System.out.println("waiting to connect to job tracker");
             while(client.jobTrackerOk.get() == false){
                 //wait for it to be reconnect
             }
+            System.out.println("already connect to job tracker");
             String answer = client.sendJob(password);
 
             System.out.println("The answer is: " + answer);
@@ -50,9 +58,7 @@ public class Client {
 
     public String sendJob(String password){
         try {
-            Socket socket = new Socket(jobTrackerAddress.Ip, jobTrackerAddress.port);
-            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            DataOutputStream output = new DataOutputStream(socket.getOutputStream());
+
             output.writeBytes(password + "/r/n");
             String answer = input.readLine();
             return answer;
@@ -93,10 +99,19 @@ public class Client {
                 System.out.println("address is: " + address);
                 IpAddress ipAddress = IpAddress.parseAddressString(address);
                 jobTrackerAddress = ipAddress;
+                socket = new Socket(jobTrackerAddress.Ip, jobTrackerAddress.port);
+                input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                output = new DataOutputStream(socket.getOutputStream());
+                selfname = zooKeeperConnector.createReturnPath("/clients/client", null, CreateMode.EPHEMERAL_SEQUENTIAL);
+                output.writeBytes("connect-"+selfname);
                 jobTrackerOk.set(true);
             } catch (KeeperException e) {
                 e.printStackTrace();
             } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
