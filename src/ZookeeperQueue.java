@@ -119,26 +119,28 @@ public class ZookeeperQueue {
 
 
         ArrayList<String> list = null;
-        try {
-            list = (ArrayList<String>)
-                    zooKeeperConnector.getZooKeeper().getChildren(queueName, new Watcher() {
-                        @Override
-                        public void process(WatchedEvent event) {
-                            countDownLatch.countDown();
-                        }
-                    });
-        } catch (KeeperException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        if (list.isEmpty()) {
-            System.out.println(queueName + " queue is empty. Going to wait");
-            countDownLatch = new CountDownLatch(1);
+        while (list == null || list.isEmpty()) {
             try {
-                countDownLatch.await();
+                list = (ArrayList<String>)
+                        zooKeeperConnector.getZooKeeper().getChildren(queueName, new Watcher() {
+                            @Override
+                            public void process(WatchedEvent event) {
+                                countDownLatch.countDown();
+                            }
+                        });
+            } catch (KeeperException e) {
+                e.printStackTrace();
             } catch (InterruptedException e) {
                 e.printStackTrace();
+            }
+            if (list.isEmpty()) {
+                System.out.println(queueName + " queue is empty. Going to wait");
+                countDownLatch = new CountDownLatch(1);
+                try {
+                    countDownLatch.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
         //Integer min = new Integer(list.get(0).substring(7));
@@ -147,6 +149,7 @@ public class ZookeeperQueue {
             if (tempValue < min) min = tempValue;
         }*/
         //System.out.println("Temporary value: " + queueName + "/element" + min);
+
         String firstChild = list.get(0);
         System.out.println("firstChild is " + firstChild);
         byte[] b = new byte[0];
