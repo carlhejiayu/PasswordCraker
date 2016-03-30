@@ -33,8 +33,8 @@ public class JobTracker {
 
     public static void main(String[] args) {
 
-        if (args.length != 1) {
-            System.out.println("Usage: java -classpath lib/zookeeper-3.3.2.jar:lib/log4j-1.2.15.jar:. Test zkServer:clientPort");
+        if (args.length != 2) {
+            System.out.println("Usage: java -classpath lib/zookeeper-3.3.2.jar:lib/log4j-1.2.15.jar:. Test zkServer:clientPort selfport");
             return;
         }
 
@@ -205,10 +205,10 @@ class jobRequestHandlingThread extends Thread{
                     String message = "";
                     if (successNumber == 1){
                         String password = new String (zkc.getZooKeeper().getData(jobpath+"/success",null,null));
-                        message = "Job finished & the password:" + password+"/r/n";
+                        message = "Job finished & the password:" + password+"\r\n";
                     }
                     else{
-                        message = "Job finished & Password Not Found /r/n";
+                        message = "Job finished & Password Not Found \r\n";
                     }
                     objectOutputStream.writeObject(message);
                 }
@@ -275,7 +275,7 @@ class jobRequestHandlingThread extends Thread{
                 if (notFoundNumber + successNumber == Task_number){
                     //that mean, we are already collect all Tasks for this jobs and we will be able to delete
                     if (successNumber == 0){
-                        objectOutputStream.writeObject("Job finished & the password is not Found /r/n");
+                        objectOutputStream.writeObject("Job finished & the password is not Found \r\n");
                     }
                     //we can delete the job node
 
@@ -327,7 +327,7 @@ class jobRequestHandlingThread extends Thread{
                     //we can delete the job node
                     String password = new String (zkc.getZooKeeper().getData(path,null,null));
                     //aslo we can send the back the successful message to
-                    objectOutputStream.writeObject("Job finished & the password:" + password+"/r/n");
+                    objectOutputStream.writeObject("Job finished & the password:" + password+"\r\n");
                 }
                 else{
                     //reset watcher??
