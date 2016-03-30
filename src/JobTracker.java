@@ -158,6 +158,7 @@ class jobRequestHandlingThread extends Thread{
         this.taskProcessingQueue =taskProcessingQueue;
         this.taskWaitingQueue = taskWaitingQueue;
 
+        System.out.println("Construct a jobRequestHandlingThread");
         successwatcher = new Watcher() { // Anonymous Watcher
             @Override
             public void process(WatchedEvent event) {
@@ -384,6 +385,7 @@ class jobRequestHandlingThread extends Thread{
 
     @Override
     public void run() {
+        System.out.println("Begin to Run");
         while (true){
             try {
                 objectOutputStream = new ObjectOutputStream(requestSocket.getOutputStream());
