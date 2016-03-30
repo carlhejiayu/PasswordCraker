@@ -104,7 +104,7 @@ public class Client {
                 input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 output = new DataOutputStream(socket.getOutputStream());
                 selfname = zooKeeperConnector.createReturnPath("/clients/client", null, CreateMode.EPHEMERAL_SEQUENTIAL);
-                output.writeBytes("connect-"+selfname);
+                output.writeBytes("connect-"+selfname+"/r/n");
                 jobTrackerOk.set(true);
             } catch (KeeperException e) {
                 e.printStackTrace();
