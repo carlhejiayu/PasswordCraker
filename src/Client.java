@@ -60,7 +60,7 @@ public class Client {
     public String sendJob(String password){
         try {
 
-            output.writeBytes(password + "\r\n");
+            output.writeBytes(password + "-" + selfname + "\r\n");
             String answer = input.readLine();
             return answer;
         } catch (IOException e) {
