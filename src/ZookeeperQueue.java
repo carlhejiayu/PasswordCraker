@@ -133,7 +133,7 @@ public class ZookeeperQueue {
                 e.printStackTrace();
             }
             if (list.isEmpty()) {
-                System.out.println("Going to wait");
+                System.out.println(queueName + " queue is empty. Going to wait");
                 countDownLatch = new CountDownLatch(1);
                 try {
                     countDownLatch.await();
