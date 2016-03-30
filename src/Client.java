@@ -60,7 +60,7 @@ public class Client {
     public String sendJob(String password){
         try {
 
-            output.writeBytes(password + "/r/n");
+            output.writeBytes(password + "\r\n");
             String answer = input.readLine();
             return answer;
         } catch (IOException e) {
@@ -104,7 +104,7 @@ public class Client {
                 input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 output = new DataOutputStream(socket.getOutputStream());
                 selfname = zooKeeperConnector.createReturnPath("/clients/client", null, CreateMode.EPHEMERAL_SEQUENTIAL);
-                output.writeBytes("connect-"+selfname+"/r/n");
+                output.writeBytes("connect-"+selfname+"\r\n");
                 jobTrackerOk.set(true);
             } catch (KeeperException e) {
                 e.printStackTrace();
