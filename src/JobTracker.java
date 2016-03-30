@@ -267,6 +267,7 @@ class jobRequestHandlingThread extends Thread{
 
 
     private void failTasksHandleEvent(WatchedEvent event){
+        System.out.println("triggered job not found event");
         String path = event.getPath();
         System.out.println("I recieved a not found message of path:" +path);
         String pattern = "/notFound";
@@ -293,11 +294,12 @@ class jobRequestHandlingThread extends Thread{
                 int successNumber = zkc.getZooKeeper().getChildren(jobpath+"/success",null, null).size();
 
                 if (notFoundNumber + successNumber == Task_number){
-                    //that mean, we are already collect all Tasks for this jobs and we will be able to delete
+                    //that mean, we are already collect all Tasks for this jobs and we will be able to deleteData
                     if (successNumber == 0){
+                        System.out.println("job finished but not found password");
                         objectOutputStream.writeObject("Job finished & the password is not Found \r\n");
                     }
-                    //we can delete the job node
+                    //we can deleteData the job node
 
 
                 }
@@ -348,8 +350,8 @@ class jobRequestHandlingThread extends Thread{
                 String client = jdata[1];
                 int notFoundNumber = zkc.getZooKeeper().getChildren(jobpath+"/notFound", null).size();
                 if (notFoundNumber + 1 == Task_number){
-                    //that mean, we are already collect all Tasks for this jobs and we will be able to delete
-                    //we can delete the job node
+                    //that mean, we are already collect all Tasks for this jobs and we will be able to deleteData
+                    //we can deleteData the job node
                     String password = new String (zkc.getZooKeeper().getData(path,null,null));
                     //aslo we can send the back the successful message to
                     objectOutputStream.writeObject("Job finished & the password:" + password+"\r\n");
