@@ -260,6 +260,7 @@ class jobRequestHandlingThread extends Thread{
 
 
     private void failTasksHandleEvent(WatchedEvent event){
+        System.out.println("triggered job not found event");
         String path = event.getPath();
         String pattern = "/notFound";
         Pattern r = Pattern.compile(pattern);
@@ -287,6 +288,7 @@ class jobRequestHandlingThread extends Thread{
                 if (notFoundNumber + successNumber == Task_number){
                     //that mean, we are already collect all Tasks for this jobs and we will be able to deleteData
                     if (successNumber == 0){
+                        System.out.println("job finished but not found password");
                         objectOutputStream.writeObject("Job finished & the password is not Found \r\n");
                     }
                     //we can deleteData the job node
