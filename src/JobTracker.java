@@ -63,7 +63,7 @@ public class JobTracker {
         }
         taskWaitingQueue = new ZookeeperQueue("taskWaitingQueue", zkc) ;
         taskWaitingQueue.tryCreate();
-        taskProcessingQueue = new  ZookeeperQueue("taskProcessingQueue", zkc);
+        taskProcessingQueue = new  ZookeeperQueue("taskProcessQueue", zkc);
         taskProcessingQueue.tryCreate();
         try {
             serverSocket = new ServerSocket(selfport);
@@ -228,7 +228,7 @@ class jobRequestHandlingThread extends Thread{
     private void checkTaskProcessingQueue(){
         //we only look for the one
         try {
-            List <String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessingQueue",null);
+            List <String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessQueue",null);
 
         } catch (KeeperException e) {
             e.printStackTrace();
@@ -374,25 +374,30 @@ class jobRequestHandlingThread extends Thread{
     private  void workerWatcherHandler (WatchedEvent event){
         // When woker fail
         String failpath = event.getPath();
-        Watcher.Event.EventType type = event.getType();
-        if (type == Watcher.Event.EventType.NodeDeleted){
-            //One worker fails
-            try {
-                List<String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessingQueue", null);
+        try {
+            String failpathdata = new String (zkc.getZooKeeper().getData(failpath,null,null));
+            String [] failpathd = failpathdata.split("=");
+            String failworkername = failpathd[0];
+            String taskinfo = failpathd[1];
+            Watcher.Event.EventType type = event.getType();
+            if (type == Watcher.Event.EventType.NodeDeleted){
+                //One worker fail
+                List<String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessQueue", null);
                 for (String eachworker: allProcessingTasks){
-                    String[] s =  eachworker.split("=");
-                    String workerpath  = s[0];
-                    if (workerpath == failpath){
-                        taskProcessingQueue.deletePath(workerpath);
-                        taskWaitingQueue.insert(s[1]);
+                    if (failworkername == eachworker){
+                        taskProcessingQueue.deletePath(failpath);
+                        taskWaitingQueue.insert(taskinfo);
                     }
 
                 }
             }
-            catch (Exception e){
-                System.out.println("Cannot all the tasks");
-            }
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+
+
         //reset watcher
         try{
             zkc.getZooKeeper().getChildren("/workersGroup",workerwatcher);}
