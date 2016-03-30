@@ -63,6 +63,7 @@ public class Worker extends Thread{
         //taskProcessQueue.tryCreate();
     }
     public void doTask(String hashword, List<String> dictionary){
+        System.out.println("start doing task:" + hashword);
         for(String word : dictionary){
             String hash = MD5Hash.getHash(word);
             if(hash.equals(hashword)){
@@ -76,11 +77,12 @@ public class Worker extends Thread{
 
     public void report(String answer, String task, boolean success){
         ZookeeperQueue reportQueue = null;
+        System.out.println("start to report:" + answer + " for " + task);
         if (success) {
-            reportQueue = new ZookeeperQueue("/jobs/" + task + "/success", zooKeeperConnector);
+            reportQueue = new ZookeeperQueue("jobs/" + task + "/success", zooKeeperConnector);
         }
         else {
-            reportQueue = new ZookeeperQueue("/jobs/" + task + "/notFound", zooKeeperConnector);
+            reportQueue = new ZookeeperQueue("jobs/" + task + "/notFound", zooKeeperConnector);
         }
         try {
             reportQueue.insert(answer);
