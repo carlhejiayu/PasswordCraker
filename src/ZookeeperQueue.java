@@ -14,7 +14,6 @@ public class ZookeeperQueue {
     String queueName;
 
     public ZookeeperQueue(String queueName, ZooKeeperConnector zooKeeperConnector) {
-        zooKeeperConnector = new ZooKeeperConnector();
         this.zooKeeperConnector = zooKeeperConnector;
         this.queueName = "/" + queueName;
 

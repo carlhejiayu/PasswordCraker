@@ -52,10 +52,12 @@ public class Worker extends Thread{
         //connect to zookeeper
         try {
             zooKeeperConnector.connect(zookeeperHost);
+
         } catch(Exception e) {
             System.out.println("Zookeeper connect "+ e.getMessage());
         }
         fileServerOk = new AtomicBoolean(false);
+        System.out.println(zooKeeperConnector.getZooKeeper());
         taskwaitingqueue = new ZookeeperQueue(taskQueue, zooKeeperConnector);
         //taskwaitingqueue.tryCreate();
         taskProcessQueue = new ZookeeperQueue(processQueue, zooKeeperConnector);

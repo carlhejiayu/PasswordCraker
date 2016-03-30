@@ -62,7 +62,7 @@ public class Client {
         System.out.println("Error: didn't get the response from job tracker");
         return null;
     }
-
+    //todo: reconnect to the job tracker B send with my name
     public void getJobTrackerAddress(){
         Stat stat = zooKeeperConnector.exists("/JobTracker", new Watcher() {
             @Override
