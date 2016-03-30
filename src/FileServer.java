@@ -25,8 +25,8 @@ public class FileServer {
     int selfPort;
     String selfAddress;
     public static void main(String[] args){
-        if (args.length != 1) {
-            System.out.println("Usage: java -classpath lib/zookeeper-3.3.2.jar:lib/log4j-1.2.15.jar:. Test zkServer:clientPort");
+        if (args.length != 2) {
+            System.out.println("Usage: java -classpath lib/zookeeper-3.3.2.jar:lib/log4j-1.2.15.jar:. Test zkServer:clientPort selfport");
             return;
         }
 
@@ -94,10 +94,11 @@ public class FileServer {
 
         String line;
         List list = new LinkedList<String>();
+        System.out.println("loading file, please wait...");
         try {
             while((line = bufferedReader.readLine()) != null) {
                 list.add(line);
-                System.out.println(line);
+                //System.out.println(line);
             }
             dictionary = new ArrayList<>(list);
             dictionarySize = dictionary.size();
@@ -107,8 +108,8 @@ public class FileServer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        FileServer fileServer = this;
+        System.out.println("finish loading file");
+        final FileServer fileServer = this;
 
         new Thread(new Runnable() {
             @Override
@@ -159,27 +160,13 @@ class requestHandlingThread extends Thread{
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(requestSocket.getOutputStream());
             String requestfile = bufferedReader.readLine();
             //parse the string
-            StringBuilder stringBuilder = new StringBuilder();
+
             int numerator = 0;
             int denominator = 0;
-            int len = requestfile.length();
-            boolean isNumerator = true;
-            for(int i = 0; i < len; i++){
-                if(isNumerator) {
-                    if (requestfile.charAt(i) != ':') {
-                        stringBuilder.append(requestfile.charAt(i));
-                    } else{
-                        isNumerator = false;
-                        numerator = Integer.parseInt(stringBuilder.toString());
-                        stringBuilder = new StringBuilder();
-                        System.out.println("numerator is " + numerator);
-                    }
-                }
-                else {
-                    stringBuilder.append(requestfile.charAt(i));
-                }
-            }
-            denominator = Integer.parseInt(stringBuilder.toString());
+            String[] s = requestfile.split(":");
+            numerator = Integer.parseInt(s[0]);
+            denominator = Integer.parseInt(s[1]);
+
             int partitionSize = Math.round((float)fileServer.dictionarySize / denominator);
             List partition = new ArrayList<>();
             if(numerator != denominator){

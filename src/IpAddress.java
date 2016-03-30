@@ -12,26 +12,10 @@ public class IpAddress {
 
     static public IpAddress parseAddressString(String address){
         //string in format of xxxxxx:####
-        int len = address.length();
-        StringBuilder stringBuilder = new StringBuilder();
-        String ip = null;
-        boolean isIp = true;
-        for(int i = 0; i < len; i++){
-            if(isIp) {
-                if (address.charAt(i) != ':') {
-                    stringBuilder.append(address.charAt(i));
-                } else{
-                    isIp = false;
-                    ip = stringBuilder.toString();
-                    stringBuilder = new StringBuilder();
-                    System.out.println("ip is " + ip);
-                }
-            }
-            else {
-                stringBuilder.append(address.charAt(i));
-            }
-        }
-        int port = Integer.parseInt(stringBuilder.toString());
+        String[] s = address.split(":");
+        String ip = s[0];
+
+        int port = Integer.parseInt(s[1]);
         return new IpAddress(ip, port);
     }
 }

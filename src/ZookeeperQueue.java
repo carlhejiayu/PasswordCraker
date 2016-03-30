@@ -14,7 +14,6 @@ public class ZookeeperQueue {
     String queueName;
 
     public ZookeeperQueue(String queueName, ZooKeeperConnector zooKeeperConnector) {
-        zooKeeperConnector = new ZooKeeperConnector();
         this.zooKeeperConnector = zooKeeperConnector;
         this.queueName = "/" + queueName;
 
@@ -68,15 +67,15 @@ public class ZookeeperQueue {
                     String d = null;
                     try {
                         byte[] b = zooKeeperConnector.getZooKeeper().getData(queueName + "/element" + tempValue, false, stat);
-                        StringBuilder stringBuilder = new StringBuilder();
-                        stringBuilder.append(b);
-                        d = stringBuilder.toString();
+
+                        d = new String(b);
 
                     } catch (KeeperException e) {
                         e.printStackTrace();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+
                     if(d.equals(data)) {
                         todelete = tempValue;
                         break;
@@ -98,6 +97,16 @@ public class ZookeeperQueue {
                 return;
             }
 
+        }
+    }
+
+    public void deletePath(String path){
+        try {
+            zooKeeperConnector.getZooKeeper().delete(path, 0);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (KeeperException e) {
+            e.printStackTrace();
         }
     }
 
@@ -158,9 +167,8 @@ public class ZookeeperQueue {
                     return pop();
                     //e.printStackTrace();
                 }
-                StringBuilder buffer = new StringBuilder();
-                buffer.append(b);
-                retvalue = buffer.toString();
+
+                retvalue = new String(b);
 
                 return retvalue;
             }
