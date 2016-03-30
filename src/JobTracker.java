@@ -279,9 +279,10 @@ class jobRequestHandlingThread extends Thread{
             startindex = m.start();
         }
         //only obtain the path of that specific job
-        String jobpath = slice_end(path, startindex -1);
+        String jobpath = slice_end(path, startindex);
         Watcher.Event.EventType type = event.getType();
-        if (type == Watcher.Event.EventType.NodeCreated){
+        System.out.println("type is " + type.toString());
+        if (type == Watcher.Event.EventType.NodeChildrenChanged){
             try {
                 //now we look for the the number of notFound case
                 String jobdata = new String (zkc.getZooKeeper().getData(jobpath, null, null));
