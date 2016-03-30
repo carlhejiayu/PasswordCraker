@@ -146,7 +146,7 @@ class jobRequestHandlingThread extends Thread{
     Watcher successwatcher;
     Watcher failwatcher;
     Watcher workerwatcher;
-    ObjectOutputStream objectOutputStream;
+    DataOutputStream objectOutputStream;
     String ClientName;
 
     ZookeeperQueue taskWaitingQueue;
@@ -211,7 +211,7 @@ class jobRequestHandlingThread extends Thread{
                     else{
                         message = "Job finished & Password Not Found \r\n";
                     }
-                    objectOutputStream.writeObject(message);
+                    objectOutputStream.writeBytes(message);
                 }
 
 
@@ -292,12 +292,18 @@ class jobRequestHandlingThread extends Thread{
 
                 // now we need to look for the number of success case
                 int successNumber = zkc.getZooKeeper().getChildren(jobpath+"/success",null, null).size();
+                System.out.println("Notfound:"+notFoundNumber+'\n');
+                System.out.println("SuccessNumber:"+successNumber+'\n');
+                System.out.println("Task_Number:"+Task_number+'\n');
+
+
+
 
                 if (notFoundNumber + successNumber == Task_number){
                     //that mean, we are already collect all Tasks for this jobs and we will be able to deleteData
                     if (successNumber == 0){
                         System.out.println("job finished but not found password");
-                        objectOutputStream.writeObject("Job finished & the password is not Found \r\n");
+                        objectOutputStream.writeBytes("Job finished & the password is not Found \r\n");
                     }
                     //we can deleteData the job node
 
@@ -354,7 +360,7 @@ class jobRequestHandlingThread extends Thread{
                     //we can deleteData the job node
                     String password = new String (zkc.getZooKeeper().getData(path,null,null));
                     //aslo we can send the back the successful message to
-                    objectOutputStream.writeObject("Job finished & the password:" + password+"\r\n");
+                    objectOutputStream.writeBytes("Job finished & the password:" + password+"\r\n");
                 }
                 else{
                     //reset watchwer because the jobs are not finshed yet
@@ -425,7 +431,7 @@ class jobRequestHandlingThread extends Thread{
         System.out.println("Begin to Run");
         while (true){
             try {
-                objectOutputStream = new ObjectOutputStream(requestSocket.getOutputStream());
+                objectOutputStream= new DataOutputStream(requestSocket.getOutputStream());
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(requestSocket.getInputStream()));
                 String request = bufferedReader.readLine();
                 System.out.println("I receiving "+request);
