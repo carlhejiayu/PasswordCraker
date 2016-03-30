@@ -36,7 +36,7 @@ public class ZookeeperQueue {
         return true;
     }
 
-    public void delete(String data) {
+    public void deleteData(String data) {
         Stat stat = null;
 
         // Get the first element available
@@ -57,16 +57,16 @@ public class ZookeeperQueue {
                 e.printStackTrace();
             }
             if (list.isEmpty()) {
-                System.out.println("Nothing to delete");
+                System.out.println("Nothing to deleteData");
                 return;
             } else {
-                Integer todelete = new Integer(-1);
+                String todelete = null;
 
                 for (String s : list) {
-                    Integer tempValue = new Integer(s.substring(7));
+                    String tempString = s;
                     String d = null;
                     try {
-                        byte[] b = zooKeeperConnector.getZooKeeper().getData(queueName + "/element" + tempValue, false, stat);
+                        byte[] b = zooKeeperConnector.getZooKeeper().getData(queueName + "/" + tempString, false, stat);
 
                         d = new String(b);
 
@@ -77,7 +77,7 @@ public class ZookeeperQueue {
                     }
 
                     if (d.equals(data)) {
-                        todelete = tempValue;
+                        todelete = tempString;
                         break;
                     }
 
@@ -85,13 +85,13 @@ public class ZookeeperQueue {
 
 
                 try {
-                    zooKeeperConnector.getZooKeeper().delete(queueName + "/element" + todelete, 0);
+                    zooKeeperConnector.getZooKeeper().delete(queueName + "/" + todelete, 0);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } catch (KeeperException e) {
-                    //cannot delete because other has delete it
+                    //cannot deleteData because other has deleteData it
                     //has to retry !!!!!!!!!!
-                    System.out.println("already delete");
+                    System.out.println("already deleteData");
                     //e.printStackTrace();
                 }
                 return;
@@ -162,14 +162,14 @@ public class ZookeeperQueue {
         }
 
         try {
-            zooKeeperConnector.getZooKeeper().delete(queueName + "/" + firstChild, 0);
+            zooKeeperConnector.getZooKeeper().delete(queueName + "/"+firstChild, 0);
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (KeeperException e) {
-            //cannot delete because other has delete it
+            //cannot deleteData because other has deleteData it
             //has to retry !!!!!!!!!!
             e.printStackTrace();
-            System.out.println("delete fail and try to pop again");
+            System.out.println("deleteData fail and try to pop again");
             return pop();
 
         }

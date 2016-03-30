@@ -3,7 +3,6 @@ import org.apache.zookeeper.data.Stat;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -107,7 +106,7 @@ public class Worker extends Thread{
         String partitionId = tasks[1];
         List dict = getFileFromFileServer(partitionId);
         doTask(hashword, dict);
-        taskProcessQueue.delete(task);
+        taskProcessQueue.deleteData(task);
     }
 
     public List getFileFromFileServer(String partition){
