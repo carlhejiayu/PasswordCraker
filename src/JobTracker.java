@@ -299,12 +299,16 @@ class jobRequestHandlingThread extends Thread {
                     String jobinfo = new String(zkc.getZooKeeper().getData(jobpath, null, null));
                     int Task_Number = Integer.parseInt(jobinfo);
                     int notFoundNumber = zkc.getZooKeeper().getChildren(jobpath + "/notFound", null).size();
-                    int successNumber = zkc.getZooKeeper().getChildren(jobpath + "/success", null).size();
+                    List <String> successelements = zkc.getZooKeeper().getChildren(jobpath + "/success", null);
+                    int successNumber = successelements.size();
+
                     if (Task_Number == notFoundNumber + successNumber) {
                         //Now we can respond to the right client
                         String message = "";
                         if (successNumber == 1) {
-                            String password = new String(zkc.getZooKeeper().getData(jobpath + "/success", null, null));
+                            Stat s = null;
+                            byte[] b=zkc.getZooKeeper().getData(jobpath + "/success/"+successelements.get(0), null, s);
+                            String password = new String(b);
                             message = "Password found:" + password + "\r\n";
                         } else {
                             message = "Failed:Password not found\r\n";
