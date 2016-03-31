@@ -33,12 +33,12 @@ public class JobTracker {
 
     public static void main(String[] args) {
 
-        if (args.length != 2) {
+        if (args.length != 1) {
             System.out.println("Usage: java -classpath lib/zookeeper-3.3.2.jar:lib/log4j-1.2.15.jar:. Test zkServer:clientPort selfport");
             return;
         }
 
-        JobTracker t = new JobTracker(args[0], Integer.parseInt(args[1]));
+        JobTracker t = new JobTracker(args[0], 7000);
 
         t.checkpath();
 
