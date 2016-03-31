@@ -230,10 +230,14 @@ class jobRequestHandlingThread extends Thread {
                         String message = "";
                         if (successNumber == 1) {
                             String password = new String(zkc.getZooKeeper().getData(jobpath + "/success", null, null));
-                            message = "Job finished & the password:" + password + "\r\n";
+                            message = "Password found:" + password + "\r\n";
                         } else {
-                            message = "Job finished & Password Not Found \r\n";
+                            message = "Failed:Password not found\r\n";
                         }
+                        objectOutputStream.writeBytes(message);
+                    }
+                    else{
+                        String message = "In progress\r\n";
                         objectOutputStream.writeBytes(message);
                     }
                 }
