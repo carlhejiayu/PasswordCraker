@@ -30,7 +30,7 @@ public class FileServer {
             return;
         }
 
-        FileServer fileServer = new FileServer(args[0], 8000, args[1]);
+        FileServer fileServer = new FileServer(args[0], 8002, args[1]);
 
 
         fileServer.checkpath();
@@ -163,6 +163,7 @@ class requestHandlingThread extends Thread{
 
             int numerator = 0;
             int denominator = 0;
+            System.out.println("request file is: " + requestfile);
             String[] s = requestfile.split(":");
             numerator = Integer.parseInt(s[0]);
             denominator = Integer.parseInt(s[1]);
