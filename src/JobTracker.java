@@ -68,6 +68,7 @@ public class JobTracker {
         taskWaitingQueue.tryCreate();
         taskProcessingQueue = new ZookeeperQueue("taskProcessQueue", zkc);
         taskProcessingQueue.tryCreate();
+
         try {
             serverSocket = new ServerSocket(selfport);
         } catch (IOException e) {
@@ -87,9 +88,23 @@ public class JobTracker {
     private void checkTaskProcessingQueue() {
         //we only look for the one
         try {
-            List<String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessQueue", null);
+            List<String> allProcessingTasksworker = zkc.getZooKeeper().getChildren("/taskProcessQueue", null);
             List<String> allworkers = zkc.getZooKeeper().getChildren("/workersGroup", null);
-            for (String Tasks : allProcessingTasks) {
+            for (String Tasksworkername : allProcessingTasksworker) {
+                    if (allworkers.contains(Tasksworkername)){
+
+                    }else{
+                        //that means the processing Tasks is not running anymore and needed to be removed and put back to taskwaitinqueue
+                        //The path for Noting the task of a failed worker
+                        String failpath = "/taskProcessQueue/" + Tasksworkername;
+                        String failpathdata = new String(zkc.getZooKeeper().getData(failpath, null, null));
+                        String[] failpathd = failpathdata.split("=");
+                        String taskinfo = failpathd[1];
+                        taskProcessingQueue.deletePath(failpath);
+                        taskWaitingQueue.insert(taskinfo);
+                    }
+
+
 
             }
 
@@ -113,7 +128,7 @@ public class JobTracker {
                     CreateMode.EPHEMERAL   // Znode type, set to EPHEMERAL.
             );
             if (ret == KeeperException.Code.OK) System.out.println("the boss!");
-
+            checkTaskProcessingQueue();
 
             // after becoming the boss,then, we could let it perform the jobRequest function
             new Thread(new Runnable() {
@@ -230,15 +245,22 @@ class jobRequestHandlingThread extends Thread {
                         String message = "";
                         if (successNumber == 1) {
                             String password = new String(zkc.getZooKeeper().getData(jobpath + "/success", null, null));
-                            message = "Job finished & the password:" + password + "\r\n";
+                            message = "Password found:" + password + "\r\n";
                         } else {
-                            message = "Job finished & Password Not Found \r\n";
+                            message = "Failed:Password not found\r\n";
                         }
+                        objectOutputStream.writeBytes(message);
+                    }
+                    else{
+                        String message = "In progress\r\n";
                         objectOutputStream.writeBytes(message);
                     }
                 }
 
             }
+            //that means the job is not found
+            objectOutputStream.writeBytes("Job not found\r\n");
+
         } catch (KeeperException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -387,6 +409,7 @@ class jobRequestHandlingThread extends Thread {
 
     }*/
 
+
     private void workerWatcherHandler(WatchedEvent event) {
         // When woker fail
         String failpath = event.getPath();
@@ -442,32 +465,45 @@ class jobRequestHandlingThread extends Thread {
             if (status.equals("status")) {
                 checkJobState(requestword);
             } else {
-                //Now we need to create a node for a job that request to crack the word , 'requestword'
-                String path = "/jobs/" + requestword;
-                //Stat stat = zkc.exists(path, jobswatcher);
+                //first we need to check if the same word exist before
+                boolean createjob = true;
+                List<String> alljobs = zkc.getZooKeeper().getChildren("/jobs", null);
+                for (String jobname : alljobs) {
+                    if (jobname.equals(requestword)) {
+                        createjob = false;
+                        checkJobState(requestword);
+                    }
+                }
+
+                if (createjob) {
+
+                    //Now we need to create a node for a job that request to crack the word , 'requestword'
+                    String path = "/jobs/" + requestword;
+                    //Stat stat = zkc.exists(path, jobswatcher);
 
 
-                // get the number of worker
-                List workers = zkc.getZooKeeper().getChildren("/workersGroup", true);
-                int worker_number = workers.size();
-                String jobInfo = String.valueOf(worker_number) + "-" ;
-                //if (stat == null) {              // znode doesn't exist; let's try creating it
-                System.out.println("Creating the job of the word: " + requestword);
-                KeeperException.Code ret = zkc.create(
-                        path,         // Path of znode
-                        jobInfo,           // Data not needed.
-                        CreateMode.PERSISTENT   // Znode type, set to EPHEMERAL.
-                );
-                // }
-                String successpath = path + "/success";
-                String failpath = path + "/notFound";
-                zkc.create(successpath, null, CreateMode.PERSISTENT);
-                zkc.create(failpath, null, CreateMode.PERSISTENT);
-                zkc.getZooKeeper().getChildren(successpath, successwatcher);
-                zkc.getZooKeeper().getChildren(failpath, failwatcher);
+                    // get the number of worker
+                    List workers = zkc.getZooKeeper().getChildren("/workersGroup", true);
+                    int worker_number = workers.size();
+                    String jobInfo = String.valueOf(worker_number);
+                    //if (stat == null) {              // znode doesn't exist; let's try creating it
+                    System.out.println("Creating the job of the word: " + requestword);
+                    KeeperException.Code ret = zkc.create(
+                            path,         // Path of znode
+                            jobInfo,           // Data not needed.
+                            CreateMode.PERSISTENT   // Znode type, set to EPHEMERAL.
+                    );
+                    // }
+                    String successpath = path + "/success";
+                    String failpath = path + "/notFound";
+                    zkc.create(successpath, null, CreateMode.PERSISTENT);
+                    zkc.create(failpath, null, CreateMode.PERSISTENT);
+                    zkc.getZooKeeper().getChildren(successpath, successwatcher);
+                    zkc.getZooKeeper().getChildren(failpath, failwatcher);
 
-                // Now we need to split the jobs and push the tasks into the Queue
-                splitJobs(requestword, worker_number);
+                    // Now we need to split the jobs and push the tasks into the Queue
+                    splitJobs(requestword, worker_number);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

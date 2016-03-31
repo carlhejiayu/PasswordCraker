@@ -32,7 +32,6 @@ public class ClientDriver {
             System.out.println("Zookeeper connect error: "+ e.getMessage());
         }
 
-        zooKeeperConnector.create("/clients", null, CreateMode.PERSISTENT);
     }
 
     public static void main(String[] args) {
