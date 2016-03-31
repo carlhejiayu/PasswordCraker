@@ -24,6 +24,7 @@ public class JobTracker {
     String jobsRoot = "/jobs";
     ZooKeeperConnector zkc;
     Watcher watcher;
+    Watcher workerwatcher;
     ZookeeperQueue taskWaitingQueue;
     ZookeeperQueue taskProcessingQueue;
     ServerSocket serverSocket;
@@ -85,6 +86,43 @@ public class JobTracker {
 
     }
 
+    private void workerWatcherHandler(WatchedEvent event) {
+        // When woker fail
+        String failpath = event.getPath();
+        try {
+            String failpathdata = new String(zkc.getZooKeeper().getData(failpath, null, null));
+            String[] failpathd = failpathdata.split("=");
+            String failworkername = failpathd[0];
+            String taskinfo = failpathd[1];
+            Watcher.Event.EventType type = event.getType();
+            if (type == Watcher.Event.EventType.NodeChildrenChanged) {
+                //One worker fail
+                List<String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessQueue", null);
+                for (String eachworker : allProcessingTasks) {
+                    if (failworkername.equals(eachworker)) {
+                        taskProcessingQueue.deletePath(failpath);
+                        taskWaitingQueue.insert(taskinfo);
+                    }
+
+                }
+            }
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+        //reset watcher
+        try {
+            zkc.getZooKeeper().getChildren("/workersGroup", workerwatcher);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
     private void checkTaskProcessingQueue() {
         //we only look for the one
         try {
@@ -92,6 +130,7 @@ public class JobTracker {
             List<String> allworkers = zkc.getZooKeeper().getChildren("/workersGroup", null);
             for (String Tasksworkername : allProcessingTasksworker) {
                     if (allworkers.contains(Tasksworkername)){
+
 
                     }else{
                         //that means the processing Tasks is not running anymore and needed to be removed and put back to taskwaitinqueue
@@ -143,6 +182,13 @@ public class JobTracker {
                     }
                 }
             }).start();
+
+            workerwatcher = new Watcher() { // Anonymous Watcher for the JobTracker Primary Purpose
+                @Override
+                public void process(WatchedEvent event) {
+                    workerWatcherHandler(event);
+                }
+            };
         }
 
         //this one will only be created once
@@ -156,6 +202,19 @@ public class JobTracker {
             );
             if (ret == KeeperException.Code.OK) System.out.println("successfully create the root for Jobs!");
         }
+
+        //the worker path will only be created once
+        Stat workeroot = zkc.exists("/workersGroup", workerwatcher);
+        if (workeroot == null) {
+            System.out.println("Creating " + "/workersGroup");
+            KeeperException.Code ret = zkc.create(
+                    "/workersGroup",         // Path of znode
+                    null,           // Data not needed.
+                    CreateMode.PERSISTENT   // Znode type, set to EPHEMERAL.
+            );
+            if (ret == KeeperException.Code.OK) System.out.println("successfully create the root for Workers!");
+        }
+
 
     }
 
@@ -213,12 +272,7 @@ class jobRequestHandlingThread extends Thread {
             }
         };*/
 
-        workerwatcher = new Watcher() {
-            @Override
-            public void process(WatchedEvent event) {
-                workerWatcherHandler(event);
-            }
-        };
+
         try {
             zkc.getZooKeeper().getChildren("/workersGroup", workerwatcher);
         } catch (Exception e) {
@@ -270,6 +324,7 @@ class jobRequestHandlingThread extends Thread {
         }
 
     }
+
 
 
 
@@ -410,42 +465,7 @@ class jobRequestHandlingThread extends Thread {
     }*/
 
 
-    private void workerWatcherHandler(WatchedEvent event) {
-        // When woker fail
-        String failpath = event.getPath();
-        try {
-            String failpathdata = new String(zkc.getZooKeeper().getData(failpath, null, null));
-            String[] failpathd = failpathdata.split("=");
-            String failworkername = failpathd[0];
-            String taskinfo = failpathd[1];
-            Watcher.Event.EventType type = event.getType();
-            if (type == Watcher.Event.EventType.NodeChildrenChanged) {
-                //One worker fail
-                List<String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessQueue", null);
-                for (String eachworker : allProcessingTasks) {
-                    if (failworkername.equals(eachworker)) {
-                        taskProcessingQueue.deletePath(failpath);
-                        taskWaitingQueue.insert(taskinfo);
-                    }
 
-                }
-            }
-        } catch (KeeperException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-
-        //reset watcher
-        try {
-            zkc.getZooKeeper().getChildren("/workersGroup", workerwatcher);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-    }
 
 
     @Override
