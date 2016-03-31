@@ -116,8 +116,7 @@ public class ClientDriver {
                 socket = new Socket(jobTrackerAddress.Ip, jobTrackerAddress.port);
                 input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 output = new DataOutputStream(socket.getOutputStream());
-                selfname = zooKeeperConnector.createReturnPath("/clients/client", null, CreateMode.EPHEMERAL_SEQUENTIAL);
-                output.writeBytes("connect-"+selfname+"\r\n");
+                //selfname = zooKeeperConnector.createReturnPath("/clients/client", null, CreateMode.EPHEMERAL_SEQUENTIAL);
                 jobTrackerOk.set(true);
             } catch (KeeperException e) {
                 e.printStackTrace();
