@@ -96,8 +96,9 @@ public class Worker extends Thread{
 
     public void getTask(){
         String task = taskwaitingqueue.pop();
+        String processPath = null;
         try {
-            taskProcessQueue.insert(myActualPath + "=" + task);
+            processPath = taskProcessQueue.insert(myActualPath + "=" + task);
         } catch (KeeperException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -108,7 +109,7 @@ public class Worker extends Thread{
         String partitionId = tasks[1];
         List dict = getFileFromFileServer(partitionId);
         doTask(hashword, dict);
-        taskProcessQueue.deleteData(task);
+        taskProcessQueue.deletePath(processPath);
     }
 
     public List getFileFromFileServer(String partition){

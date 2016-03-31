@@ -30,10 +30,10 @@ public class ZookeeperQueue {
     }
 
 
-    public boolean insert(String data) throws KeeperException, InterruptedException {
+    public String insert(String data) throws KeeperException, InterruptedException {
 
-        zooKeeperConnector.create(queueName + "/element", data, CreateMode.PERSISTENT_SEQUENTIAL);
-        return true;
+        String path = zooKeeperConnector.createReturnPath(queueName + "/element", data, CreateMode.PERSISTENT_SEQUENTIAL);
+        return path;
     }
 
     public void deleteData(String data) {
