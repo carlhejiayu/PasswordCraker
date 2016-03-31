@@ -56,7 +56,8 @@ public class ClientDriver {
             while(client.jobTrackerOk.get() == false){
                 //wait for it to be reconnect
             }
-            client.checkStatus(parameter);
+            String status = client.checkStatus(parameter);
+            System.out.println(status);
 
         }
     }
