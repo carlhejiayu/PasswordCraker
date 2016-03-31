@@ -68,6 +68,7 @@ public class JobTracker {
         taskWaitingQueue.tryCreate();
         taskProcessingQueue = new ZookeeperQueue("taskProcessQueue", zkc);
         taskProcessingQueue.tryCreate();
+
         try {
             serverSocket = new ServerSocket(selfport);
         } catch (IOException e) {
@@ -87,9 +88,23 @@ public class JobTracker {
     private void checkTaskProcessingQueue() {
         //we only look for the one
         try {
-            List<String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessQueue", null);
+            List<String> allProcessingTasksworker = zkc.getZooKeeper().getChildren("/taskProcessQueue", null);
             List<String> allworkers = zkc.getZooKeeper().getChildren("/workersGroup", null);
-            for (String Tasks : allProcessingTasks) {
+            for (String Tasksworkername : allProcessingTasksworker) {
+                    if (allworkers.contains(Tasksworkername)){
+
+                    }else{
+                        //that means the processing Tasks is not running anymore and needed to be removed and put back to taskwaitinqueue
+                        //The path for Noting the task of a failed worker
+                        String failpath = "/taskProcessQueue" + Tasksworkername;
+                        String failpathdata = new String(zkc.getZooKeeper().getData(failpath, null, null));
+                        String[] failpathd = failpathdata.split("=");
+                        String taskinfo = failpathd[1];
+                        taskProcessingQueue.deletePath(failpath);
+                        taskWaitingQueue.insert(taskinfo);
+                    }
+
+
 
             }
 
@@ -113,7 +128,7 @@ public class JobTracker {
                     CreateMode.EPHEMERAL   // Znode type, set to EPHEMERAL.
             );
             if (ret == KeeperException.Code.OK) System.out.println("the boss!");
-
+            checkTaskProcessingQueue();
 
             // after becoming the boss,then, we could let it perform the jobRequest function
             new Thread(new Runnable() {
