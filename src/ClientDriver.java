@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by herbert on 2016-03-29.
  */
-public class Client {
+public class ClientDriver {
     ZooKeeperConnector zooKeeperConnector;
     AtomicBoolean jobTrackerOk;
     IpAddress jobTrackerAddress;
@@ -37,24 +37,26 @@ public class Client {
 
     public static void main(String[] args) {
         String zkHost = args[0];
+        String type = args[1];
+        String parameter = args[2];
+
         Client client = new Client(zkHost);
         client.getJobTrackerAddress();
-        Scanner scanner = new Scanner(System.in);
-        while(true) {
-            System.out.println("please enter the hashed password");
 
+        if(type.equal("job")){
+          String password = parameter;
+          System.out.println("waiting to connect to job tracker");
+          while(client.jobTrackerOk.get() == false){
+            //wait for it to be reconnect
+          }
+          System.out.println("already connect to job tracker");
+          client.sendJob(password);
 
-            String password = scanner.nextLine();
-            System.out.println("waiting to connect to job tracker");
-            while(client.jobTrackerOk.get() == false){
-                //wait for it to be reconnect
-            }
-            System.out.println("already connect to job tracker");
-            String answer = client.sendJob(password);
-
-            System.out.println("The answer is: " + answer);
+          System.out.println("The answer is: " + answer);
         }
-
+        else if(type.equal("status")){
+          
+        }
     }
 
     public String sendJob(String password){
