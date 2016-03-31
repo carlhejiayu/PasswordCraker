@@ -469,7 +469,7 @@ class jobRequestHandlingThread extends Thread {
                 // get the number of worker
                 List workers = zkc.getZooKeeper().getChildren("/workersGroup", true);
                 int worker_number = workers.size();
-                String jobInfo = String.valueOf(worker_number) + "-" ;
+                String jobInfo = String.valueOf(worker_number)  ;
                 //if (stat == null) {              // znode doesn't exist; let's try creating it
                 System.out.println("Creating the job of the word: " + requestword);
                 KeeperException.Code ret = zkc.create(
