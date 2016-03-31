@@ -158,6 +158,34 @@ public class JobTracker {
 
 
     private void checkpath() {
+
+        //this one will only be created once
+        Stat jobrootsta = zkc.exists(jobsRoot, watcher);
+        if (jobrootsta == null) {
+            System.out.println("Creating " + jobsRoot);
+            KeeperException.Code ret = zkc.create(
+                    jobsRoot,         // Path of znode
+                    null,           // Data not needed.
+                    CreateMode.PERSISTENT   // Znode type, set to EPHEMERAL.
+            );
+            if (ret == KeeperException.Code.OK) System.out.println("successfully create the root for Jobs!");
+        }
+
+        //the worker path will only be created once
+        Stat workeroot = zkc.exists("/workersGroup", workerwatcher);
+        if (workeroot == null) {
+            System.out.println("Creating " + "/workersGroup");
+            KeeperException.Code ret = zkc.create(
+                    "/workersGroup",         // Path of znode
+                    null,           // Data not needed.
+                    CreateMode.PERSISTENT   // Znode type, set to EPHEMERAL.
+            );
+            if (ret == KeeperException.Code.OK) System.out.println("successfully create the root for Workers!");
+        }
+
+
+
+
         Stat stat = zkc.exists(root, watcher);
         if (stat == null) {              // znode doesn't exist; let's try creating it
             System.out.println("Creating " + root);
@@ -191,29 +219,7 @@ public class JobTracker {
             };
         }
 
-        //this one will only be created once
-        Stat jobrootsta = zkc.exists(jobsRoot, watcher);
-        if (jobrootsta == null) {
-            System.out.println("Creating " + jobsRoot);
-            KeeperException.Code ret = zkc.create(
-                    jobsRoot,         // Path of znode
-                    null,           // Data not needed.
-                    CreateMode.PERSISTENT   // Znode type, set to EPHEMERAL.
-            );
-            if (ret == KeeperException.Code.OK) System.out.println("successfully create the root for Jobs!");
-        }
 
-        //the worker path will only be created once
-        Stat workeroot = zkc.exists("/workersGroup", workerwatcher);
-        if (workeroot == null) {
-            System.out.println("Creating " + "/workersGroup");
-            KeeperException.Code ret = zkc.create(
-                    "/workersGroup",         // Path of znode
-                    null,           // Data not needed.
-                    CreateMode.PERSISTENT   // Znode type, set to EPHEMERAL.
-            );
-            if (ret == KeeperException.Code.OK) System.out.println("successfully create the root for Workers!");
-        }
 
 
     }
