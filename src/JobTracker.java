@@ -402,7 +402,7 @@ class jobRequestHandlingThread extends Thread{
                 //One worker fail
                 List<String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessQueue", null);
                 for (String eachworker: allProcessingTasks){
-                    if (failworkername == eachworker){
+                    if (failworkername.equals(eachworker) ){
                         taskProcessingQueue.deletePath(failpath);
                         taskWaitingQueue.insert(taskinfo);
                     }
