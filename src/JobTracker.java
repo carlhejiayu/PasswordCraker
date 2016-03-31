@@ -347,9 +347,9 @@ class jobRequestHandlingThread extends Thread{
             startindex = m.start();
         }
         //only obtain the path of that specific job
-        String jobpath = slice_end(path, startindex -1);
+        String jobpath = slice_end(path, startindex);
         Watcher.Event.EventType type = event.getType();
-        if (type == Watcher.Event.EventType.NodeCreated){
+        if (type == Watcher.Event.EventType.NodeChildrenChanged){
             try {
                 String jobdata = new String (zkc.getZooKeeper().getData(jobpath, null, null));
                 String []jdata = jobdata.split("-");
@@ -402,7 +402,7 @@ class jobRequestHandlingThread extends Thread{
                 //One worker fail
                 List<String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessQueue", null);
                 for (String eachworker: allProcessingTasks){
-                    if (failworkername == eachworker){
+                    if (failworkername.equals(eachworker) ){
                         taskProcessingQueue.deletePath(failpath);
                         taskWaitingQueue.insert(taskinfo);
                     }
