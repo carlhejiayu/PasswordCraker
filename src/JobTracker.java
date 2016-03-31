@@ -96,7 +96,7 @@ public class JobTracker {
                     }else{
                         //that means the processing Tasks is not running anymore and needed to be removed and put back to taskwaitinqueue
                         //The path for Noting the task of a failed worker
-                        String failpath = "/taskProcessQueue" + Tasksworkername;
+                        String failpath = "/taskProcessQueue/" + Tasksworkername;
                         String failpathdata = new String(zkc.getZooKeeper().getData(failpath, null, null));
                         String[] failpathd = failpathdata.split("=");
                         String taskinfo = failpathd[1];
