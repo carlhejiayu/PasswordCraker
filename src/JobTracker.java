@@ -85,6 +85,32 @@ public class JobTracker {
         };
 
     }
+    private void checkUnfinishedSplitJobs(){
+        //Check-jobs info
+        try {
+            List<String> alljobs = zkc.getZooKeeper().getChildren("/jobs",null);
+            for (String eachjob: alljobs){
+                String jobPath = "/jobs/"+ eachjob;
+                String jobinfo = new String (zkc.getZooKeeper().getData(jobPath,null,null));
+                String []jobi = jobinfo.split("-");
+                int Task_Number = Integer.parseInt(jobi[0]);
+                int Current_Number = Integer.parseInt(jobi[1]);
+                if (Task_Number != Current_Number){
+                    //that means the JobTracker fail during the process of splitting Task
+                    //we need to continue adding the Tasks
+                    for (int i = Current_Number; i <Task_Number; i ++ ){
+                        String info = eachjob + "-" + String.valueOf(i + 1) + ":" + String.valueOf(Task_Number);
+                        taskWaitingQueue.insert(info);
+                    }
+                }
+            }
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+    }
 
     private void workerWatcherHandler(WatchedEvent event) {
         // When woker fail
@@ -196,6 +222,7 @@ public class JobTracker {
             );
             if (ret == KeeperException.Code.OK) System.out.println("the boss!");
             checkTaskProcessingQueue();
+            checkUnfinishedSplitJobs();
 
             // after becoming the boss,then, we could let it perform the jobRequest function
             new Thread(new Runnable() {
@@ -218,9 +245,6 @@ public class JobTracker {
                 }
             };
         }
-
-
-
 
     }
 
@@ -297,7 +321,8 @@ class jobRequestHandlingThread extends Thread {
                 if (jobname.equals(requestword)) {
                     String jobpath = "/jobs/" + jobname;
                     String jobinfo = new String(zkc.getZooKeeper().getData(jobpath, null, null));
-                    int Task_Number = Integer.parseInt(jobinfo);
+                    String [] jobi = jobinfo.split("-");
+                    int Task_Number = Integer.parseInt(jobi[0]);
                     int notFoundNumber = zkc.getZooKeeper().getChildren(jobpath + "/notFound", null).size();
                     List <String> successelements = zkc.getZooKeeper().getChildren(jobpath + "/success", null);
                     int successNumber = successelements.size();
@@ -338,12 +363,14 @@ class jobRequestHandlingThread extends Thread {
 
 
 
-    private void splitJobs(String word, int worker_number) {
+    private void splitJobs(String word, int worker_number, String jobPath) {
         try {
             for (int i = 0; i < worker_number; i++) {
                 String info = "";
                 info = word + "-" + String.valueOf(i + 1) + ":" + String.valueOf(worker_number);
                 taskWaitingQueue.insert(info);
+                String jobinfo = String.valueOf(worker_number)+"-"+String.valueOf(i+1);
+                zkc.getZooKeeper().setData(jobPath,jobinfo.getBytes(),i+1);
             }
 
         } catch (Exception e) {
@@ -508,14 +535,14 @@ class jobRequestHandlingThread extends Thread {
                 if (createjob) {
 
                     //Now we need to create a node for a job that request to crack the word , 'requestword'
-                    String path = "/jobs/" + requestword;
+                    String path = "/jobs/" + requestword ;
                     //Stat stat = zkc.exists(path, jobswatcher);
 
 
                     // get the number of worker
                     List workers = zkc.getZooKeeper().getChildren("/workersGroup", true);
                     int worker_number = workers.size();
-                    String jobInfo = String.valueOf(worker_number);
+                    String jobInfo = String.valueOf(worker_number) + "-0";
                     //if (stat == null) {              // znode doesn't exist; let's try creating it
                     System.out.println("Creating the job of the word: " + requestword);
                     KeeperException.Code ret = zkc.create(
@@ -532,7 +559,7 @@ class jobRequestHandlingThread extends Thread {
                     zkc.getZooKeeper().getChildren(failpath, failwatcher);
 
                     // Now we need to split the jobs and push the tasks into the Queue
-                    splitJobs(requestword, worker_number);
+                    splitJobs(requestword, worker_number,path);
                 }
             }
         } catch (IOException e) {
