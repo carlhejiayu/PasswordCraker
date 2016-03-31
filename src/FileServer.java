@@ -26,11 +26,11 @@ public class FileServer {
     String selfAddress;
     public static void main(String[] args){
         if (args.length != 2) {
-            System.out.println("Usage: java -classpath lib/zookeeper-3.3.2.jar:lib/log4j-1.2.15.jar:. Test zkServer:clientPort selfport");
+            System.out.println("Usage: java -classpath lib/zookeeper-3.3.2.jar:lib/log4j-1.2.15.jar:. Test zkServer:clientPort filename");
             return;
         }
 
-        FileServer fileServer = new FileServer(args[0], Integer.parseInt(args[1]));
+        FileServer fileServer = new FileServer(args[0], 8000, args[1]);
 
 
         fileServer.checkpath();
@@ -55,7 +55,7 @@ public class FileServer {
         }
     }
 
-    public FileServer(String hosts, int selfPort) {
+    public FileServer(String hosts, int selfPort, String filename) {
         zooKeeperConnector = new ZooKeeperConnector();
         try {
             zooKeeperConnector.connect(hosts);
@@ -83,7 +83,7 @@ public class FileServer {
         FileReader fileReader =
                 null;
         try {
-            fileReader = new FileReader("lowercase.rand");
+            fileReader = new FileReader(filename);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

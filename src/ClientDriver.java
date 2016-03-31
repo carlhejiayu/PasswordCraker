@@ -22,7 +22,7 @@ public class ClientDriver {
     DataOutputStream output;
     Socket socket;
     String selfname;
-    public Client(String zookeeperHost) {
+    public ClientDriver(String zookeeperHost) {
         jobTrackerOk = new AtomicBoolean(false);
         zooKeeperConnector = new ZooKeeperConnector();
         //connect to zookeeper
@@ -40,36 +40,46 @@ public class ClientDriver {
         String type = args[1];
         String parameter = args[2];
 
-        Client client = new Client(zkHost);
+        ClientDriver client = new ClientDriver(zkHost);
         client.getJobTrackerAddress();
 
-        if(type.equal("job")){
+        if(type.equals("job")){
           String password = parameter;
-          System.out.println("waiting to connect to job tracker");
+
           while(client.jobTrackerOk.get() == false){
             //wait for it to be reconnect
           }
-          System.out.println("already connect to job tracker");
           client.sendJob(password);
 
-          System.out.println("The answer is: " + answer);
         }
-        else if(type.equal("status")){
-          
+        else if(type.equals("status")){
+            while(client.jobTrackerOk.get() == false){
+                //wait for it to be reconnect
+            }
+            client.checkStatus(parameter);
+
         }
     }
-
-    public String sendJob(String password){
+    public String checkStatus(String request){
         try {
-
-            output.writeBytes(password + "-" + selfname + "\r\n");
+            output.writeBytes("status-" + request + "\r\n");
             String answer = input.readLine();
             return answer;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("Error: didn't get the response from job tracker");
+
         return null;
+
+    }
+    public void sendJob(String password){
+        try {
+
+            output.writeBytes("job-" + password + "\r\n");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     //todo: reconnect to the job tracker B send with my name
     public void getJobTrackerAddress(){
