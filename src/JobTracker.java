@@ -67,7 +67,7 @@ public class JobTracker {
         }
 
         //job Tracker sequence Queue
-        jtSequence = new ZookeeperQueue("taskWaitingQueue", zkc);
+        jtSequence = new ZookeeperQueue("jtSequencer", zkc);
         jtSequence.tryCreate();
 
 
