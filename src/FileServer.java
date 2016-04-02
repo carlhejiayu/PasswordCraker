@@ -24,13 +24,14 @@ public class FileServer {
     ServerSocket serverSocket;
     int selfPort;
     String selfAddress;
+    ZookeeperQueue fileServerSequencer;
     public static void main(String[] args){
         if (args.length != 2) {
             System.out.println("Usage: java -classpath lib/zookeeper-3.3.2.jar:lib/log4j-1.2.15.jar:. Test zkServer:clientPort filename");
             return;
         }
 
-        FileServer fileServer = new FileServer(args[0], 8000, args[1]);
+        FileServer fileServer = new FileServer(args[0], 9500, args[1]);
 
 
         fileServer.checkpath();
@@ -42,6 +43,7 @@ public class FileServer {
     }
 
     private void checkpath() {
+
         Stat stat = zooKeeperConnector.exists(myPath, watcher);
 
         if (stat == null) {              // znode doesn't exist; let's try creating it
@@ -77,6 +79,11 @@ public class FileServer {
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
+        //increment self port
+        fileServerSequencer = new ZookeeperQueue("fileServerSequncer", zooKeeperConnector);
+        fileServerSequencer.tryCreate();
+        int inc_port = fileServerSequencer.insertAndGetSequence();
+        this.selfPort += inc_port;
 
         //read dictionary from file
         // FileReader reads text files in the default encoding.
@@ -87,7 +94,6 @@ public class FileServer {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-
         // Always wrap FileReader in BufferedReader.
         BufferedReader bufferedReader =
                 new BufferedReader(fileReader);
@@ -108,6 +114,7 @@ public class FileServer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         System.out.println("finish loading file");
         final FileServer fileServer = this;
 
