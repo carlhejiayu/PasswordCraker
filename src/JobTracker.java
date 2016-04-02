@@ -129,6 +129,13 @@ public class JobTracker {
     private void workerWatcherHandler(WatchedEvent event) {
         // When woker fail
         System.out.println("Recieving a failing worker failing");
+        //reset watcher
+        try {
+            System.out.println("reset worker watcher");
+            zkc.getZooKeeper().getChildren("/workersGroup", workerwatcher);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         String failpath = event.getPath();
         try {
             String failpathdata = new String(zkc.getZooKeeper().getData(failpath, null, null));
@@ -136,6 +143,7 @@ public class JobTracker {
             String failworkername = failpathd[0];
             String taskinfo = failpathd[1];
             Watcher.Event.EventType type = event.getType();
+            System.out.println("The type of message is "+type.toString());
             if (type == Watcher.Event.EventType.NodeChildrenChanged) {
                 //One worker fail
                 System.out.println("Confirming Recieving a failing worker failing");
@@ -157,12 +165,7 @@ public class JobTracker {
         }
 
 
-        //reset watcher
-        try {
-            zkc.getZooKeeper().getChildren("/workersGroup", workerwatcher);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
 
 
     }
