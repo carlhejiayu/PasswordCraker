@@ -38,7 +38,7 @@ public class ZookeeperQueue {
 
     public int insertAndGetSequence(){
         String path = zooKeeperConnector.createReturnPath(queueName + "/element", "sequence", CreateMode.PERSISTENT_SEQUENTIAL);
-        return Integer.parseInt(path.substring(7));
+        return Integer.parseInt(path.substring(7+1+queueName.length()));
     }
 
 
