@@ -108,7 +108,7 @@ public class FileServer {
             }
             dictionary = new ArrayList<>(list);
             dictionarySize = dictionary.size();
-            serverSocket = new ServerSocket(selfPort);
+            serverSocket = new ServerSocket(this.selfPort);
 
 
         } catch (IOException e) {

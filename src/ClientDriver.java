@@ -59,6 +59,11 @@ public class ClientDriver {
             System.out.println(status);
 
         }
+        try {
+            client.zooKeeperConnector.close();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
     public String checkStatus(String request){
         try {
