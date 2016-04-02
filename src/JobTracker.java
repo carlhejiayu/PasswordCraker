@@ -162,13 +162,16 @@ public class JobTracker {
                 //One worker fail
                 System.out.println("Confirming Recieving a failing worker failing");
                 List<String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessQueue", null);
-                for (String eachworker : allProcessingTasks) {
+                for (String eachTask : allProcessingTasks) {
+                    String taskdata = new String (zkc.getZooKeeper().getData("/taskProcessQueue/"+eachTask,null,null));
+                    String[] tasktd = taskdata.split("=");
+                    String eachworker = tasktd[0];
                     if (failname.equals(eachworker)) {
                         System.out.println("Worker "+failname +"Fail");
                         String acpath = "/taskProcessQueue/" + eachworker;
-                        String failpathdata = new String(zkc.getZooKeeper().getData(acpath, null, null));
-                        String[] failpathd = failpathdata.split("=");
-                        String taskinfo = failpathd[1];
+                       // String failpathdata = new String(zkc.getZooKeeper().getData(acpath, null, null));
+                        //String[] failpathd = failpathdata.split("=");
+                        String taskinfo = tasktd[1];
                         System.out.println("The job info is "+taskinfo);
                         taskProcessingQueue.deletePath(acpath);
                         taskWaitingQueue.insert(taskinfo);
@@ -296,7 +299,12 @@ public class JobTracker {
 
 
             try {
-                zkc.getZooKeeper().getChildren("/workersGroup", workerGroupWatch);
+                List<String> allworkers = zkc.getZooKeeper().getChildren("/workersGroup", workerGroupWatch);
+                for (String eachworkers: allworkers){
+                    //set all the individual watcher
+                    String workerpath = "/workersGroup/"+ eachworkers;
+                    zkc.getZooKeeper().exists(workerpath,workerwatcher);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
