@@ -312,6 +312,37 @@ class jobRequestHandlingThread extends Thread {
 
     }
 
+    public void deleteJob(String jobName) {
+        String path = "/jobs/" + jobName;
+        String successpath = "/jobs/" + jobName + "/success";
+        String failpath = "/jobs/" + jobName + "/notFound";
+        try {
+            List<String> children = zkc.getZooKeeper().getChildren(successpath, false);
+            for (String child : children) {
+                zkc.getZooKeeper().delete(successpath + "/" + child,-1);
+            }
+            zkc.getZooKeeper().delete(successpath, -1);
+
+            List<String> failchildren = zkc.getZooKeeper().getChildren(failpath, false);
+            for (String child : failchildren) {
+                zkc.getZooKeeper().delete(failpath + "/" + child,-1);
+            }
+            zkc.getZooKeeper().delete(failpath, -1);
+
+            zkc.getZooKeeper().delete(path,-1);
+
+        }
+        catch (KeeperException.NoNodeException e) {
+            //System.out.printf("Group %s does not exist\n", groupName);
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     private void checkJobState(String requestword) {
         //we need to check whether some of the jobs have been finished during the time when it is crashed and restablish a new primary job Tracker
         try {
@@ -338,7 +369,11 @@ class jobRequestHandlingThread extends Thread {
                         } else {
                             message = "Failed:Password not found\r\n";
                         }
+
                         objectOutputStream.writeBytes(message);
+                        //we delete the job in the zookeeper
+                        deleteJob(jobname);
+
                     }
                     else{
                         String message = "In progress\r\n";
