@@ -128,6 +128,7 @@ public class JobTracker {
 
     private void workerWatcherHandler(WatchedEvent event) {
         // When woker fail
+        System.out.println("Recieving a failing worker failing");
         String failpath = event.getPath();
         try {
             String failpathdata = new String(zkc.getZooKeeper().getData(failpath, null, null));
@@ -137,9 +138,12 @@ public class JobTracker {
             Watcher.Event.EventType type = event.getType();
             if (type == Watcher.Event.EventType.NodeChildrenChanged) {
                 //One worker fail
+                System.out.println("Confirming Recieving a failing worker failing");
                 List<String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessQueue", null);
                 for (String eachworker : allProcessingTasks) {
                     if (failworkername.equals(eachworker)) {
+                        System.out.println("Worker "+failworkername +"Fail");
+                        System.out.println("The job info is "+taskinfo);
                         taskProcessingQueue.deletePath(failpath);
                         taskWaitingQueue.insert(taskinfo);
                     }
