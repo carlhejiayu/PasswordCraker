@@ -113,7 +113,7 @@ public class JobTracker {
                     //we need to continue adding the Tasks
                     for (int i = Current_Number; i <Task_Number; i ++ ){
                         String info = eachjob + "-" + String.valueOf(i + 1) + ":" + String.valueOf(Task_Number);
-                        taskWaitingQueue.insert(info);
+                        taskWaitingQueue.insertWithNodeName(info, info);
                         String newjobinfo = String.valueOf(Task_Number)+"-"+String.valueOf(i+1);
                         zkc.getZooKeeper().setData(jobPath,newjobinfo.getBytes(), -1);
                     }
@@ -174,7 +174,9 @@ public class JobTracker {
                         String taskinfo = tasktd[1];
                         System.out.println("The job info is "+taskinfo);
                         taskProcessingQueue.deletePath(acpath);
-                        taskWaitingQueue.insert(taskinfo);
+                        if(! taskWaitingQueue.exist(taskinfo)) {
+                            taskWaitingQueue.insertWithNodeName(taskinfo, taskinfo);
+                        }
                     }
 
                 }
@@ -208,7 +210,9 @@ public class JobTracker {
                         String[] failpathd = failpathdata.split("=");
                         String taskinfo = failpathd[1];
                         taskProcessingQueue.deletePath(failpath);
-                        taskWaitingQueue.insert(taskinfo);
+                        if(! taskWaitingQueue.exist(taskinfo)) {
+                            taskWaitingQueue.insertWithNodeName(taskinfo, taskinfo);
+                        }
                     }
 
 
@@ -470,7 +474,7 @@ class jobRequestHandlingThread extends Thread {
             for (int i = 0; i < worker_number; i++) {
                 String info = "";
                 info = word + "-" + String.valueOf(i + 1) + ":" + String.valueOf(worker_number);
-                taskWaitingQueue.insert(info);
+                taskWaitingQueue.insertWithNodeName(info, info);
                 String jobinfo = String.valueOf(worker_number)+"-"+String.valueOf(i+1);
                 zkc.getZooKeeper().setData(jobPath,jobinfo.getBytes(), -1);
             }
