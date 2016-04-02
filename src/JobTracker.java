@@ -134,7 +134,8 @@ public class JobTracker {
             System.out.println("reset worker watcher");
             zkc.getZooKeeper().getChildren("/workersGroup", workerwatcher);
             String failpath = event.getPath();
-            System.out.println("1");
+            System.out.println("event path " + failpath);
+            /*
             String failpathdata = new String(zkc.getZooKeeper().getData(failpath, null, null));
             System.out.println("2");
             String[] failpathd = failpathdata.split("=");
@@ -142,16 +143,20 @@ public class JobTracker {
             String failworkername = failpathd[0];
             System.out.println("4");
             String taskinfo = failpathd[1];
-            System.out.println("5");
+            System.out.println("5");*/
             Watcher.Event.EventType type = event.getType();
             System.out.println("The type of message is "+type.toString());
-            if (type == Watcher.Event.EventType.NodeChildrenChanged) {
+            if (type == Watcher.Event.EventType.NodeDeleted) {
                 //One worker fail
                 System.out.println("Confirming Recieving a failing worker failing");
                 List<String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessQueue", null);
                 for (String eachworker : allProcessingTasks) {
-                    if (failworkername.equals(eachworker)) {
-                        System.out.println("Worker "+failworkername +"Fail");
+                    if (failpath.equals(eachworker)) {
+                        System.out.println("Worker "+failpath +"Fail");
+                        String acpath = "/taskProcessQueue/" + eachworker;
+                        String failpathdata = new String(zkc.getZooKeeper().getData(acpath, null, null));
+                        String[] failpathd = failpathdata.split("=");
+                        String taskinfo = failpathd[1];
                         System.out.println("The job info is "+taskinfo);
                         taskProcessingQueue.deletePath(failpath);
                         taskWaitingQueue.insert(taskinfo);
