@@ -105,6 +105,7 @@ public class Worker extends Thread{
             e.printStackTrace();
         }
         String[] tasks = task.split("-");
+        System.out.println("getting task: " + task);
         String hashword = tasks[0];
         String partitionId = tasks[1];
         List dict = getFileFromFileServer(partitionId);

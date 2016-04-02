@@ -110,9 +110,9 @@ public class ZookeeperQueue {
         try {
             zooKeeperConnector.getZooKeeper().delete(path, 0);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         } catch (KeeperException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
     }
 
@@ -135,9 +135,9 @@ public class ZookeeperQueue {
                             }
                         });
             } catch (KeeperException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
             if (list.isEmpty()) {
                 System.out.println(queueName + " queue is empty. Going to wait");
@@ -145,7 +145,7 @@ public class ZookeeperQueue {
                 try {
                     countDownLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                 }
             }
         }
@@ -162,19 +162,19 @@ public class ZookeeperQueue {
         try {
             b = zooKeeperConnector.getZooKeeper().getData(queueName + "/"+firstChild, null, stat);
         } catch (KeeperException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
 
         try {
             zooKeeperConnector.getZooKeeper().delete(queueName + "/"+firstChild, 0);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         } catch (KeeperException e) {
             //cannot deleteData because other has deleteData it
             //has to retry !!!!!!!!!!
-            e.printStackTrace();
+            //e.printStackTrace();
             System.out.println("deleteData fail and try to pop again");
             return pop();
 
