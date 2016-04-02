@@ -27,6 +27,7 @@ public class JobTracker {
     Watcher workerwatcher;
     ZookeeperQueue taskWaitingQueue;
     ZookeeperQueue taskProcessingQueue;
+    ZookeeperQueue jtSequence;
     ServerSocket serverSocket;
     String selfAddress;
     int selfport;
@@ -39,7 +40,7 @@ public class JobTracker {
             return;
         }
 
-        JobTracker t = new JobTracker(args[0], 7001);
+        JobTracker t = new JobTracker(args[0], 7500);
 
         t.checkpath();
 
@@ -54,7 +55,6 @@ public class JobTracker {
 
     public JobTracker(String hosts, int selfport) {
         zkc = new ZooKeeperConnector();
-        this.selfport = selfport;
         try {
             this.selfAddress = InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException e) {
@@ -65,17 +65,29 @@ public class JobTracker {
         } catch (Exception e) {
             System.out.println("Zookeeper connect " + e.getMessage());
         }
+
+        //job Tracker sequence Queue
+        jtSequence = new ZookeeperQueue("taskWaitingQueue", zkc);
+        jtSequence.tryCreate();
+
+
         taskWaitingQueue = new ZookeeperQueue("taskWaitingQueue", zkc);
         taskWaitingQueue.tryCreate();
         taskProcessingQueue = new ZookeeperQueue("taskProcessQueue", zkc);
         taskProcessingQueue.tryCreate();
 
+
+        //selfport
+        int inc_port = jtSequence.insertAndGetSequence();
+        this.selfport = selfport + inc_port ;
+
+
+
         try {
-            serverSocket = new ServerSocket(selfport);
+            serverSocket = new ServerSocket(this.selfport);
         } catch (IOException e) {
             e.printStackTrace();
         }
-
 
         watcher = new Watcher() { // Anonymous Watcher for the JobTracker Primary Purpose
             @Override
@@ -184,6 +196,7 @@ public class JobTracker {
 
 
     private void checkpath() {
+
 
         //this one will only be created once
         Stat jobrootsta = zkc.exists(jobsRoot, watcher);
