@@ -96,21 +96,24 @@ public class Worker extends Thread{
 
     public void getTask(){
         String task = taskwaitingqueue.pop();
+        System.out.println("getting task: " + task);
         String processPath = null;
         try {
             processPath = taskProcessQueue.insert(myActualPath + "=" + task);
+            System.out.println("put the task into the process queue");
         } catch (KeeperException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         String[] tasks = task.split("-");
-        System.out.println("getting task: " + task);
+
         String hashword = tasks[0];
         String partitionId = tasks[1];
         List dict = getFileFromFileServer(partitionId);
         doTask(hashword, dict);
         taskProcessQueue.deletePath(processPath);
+        System.out.println("remove task from the process queue");
     }
 
     public List getFileFromFileServer(String partition){
