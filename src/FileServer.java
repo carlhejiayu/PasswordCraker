@@ -31,7 +31,7 @@ public class FileServer {
             return;
         }
 
-        FileServer fileServer = new FileServer(args[0], 9500, args[1]);
+        FileServer fileServer = new FileServer(args[0], 5100, args[1]);
 
 
         fileServer.checkpath();
