@@ -143,7 +143,13 @@ public class Worker extends Thread{
             output.writeBytes(partition + "\r\n");
             return (List) input.readObject();
         } catch (IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            System.out.println("file server crash during the file transfer wait for file server up");
+            while(!fileServerOk.get()){
+
+            }
+            System.out.println("file server up again so we can continue the file transfer");
+            return getFileFromFileServer(partition);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
