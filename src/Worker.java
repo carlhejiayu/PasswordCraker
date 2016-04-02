@@ -95,17 +95,36 @@ public class Worker extends Thread{
 
 
     public void getTask(){
-        String task = taskwaitingqueue.pop();
+        String[] taskAndPath = taskwaitingqueue.read();
+        String task = taskAndPath[0];
         System.out.println("getting task: " + task);
         String processPath = null;
         try {
-            processPath = taskProcessQueue.insert(myActualPath + "=" + task);
-            System.out.println("put the task into the process queue");
+            if(!taskProcessQueue.exist(task)) {
+                processPath = taskProcessQueue.insertWithNodeName(myActualPath + "=" + task, task);
+                System.out.println("put the task into the process queue");
+            }
+            else {
+                System.out.println("cannot insert into process queue successfully since already exist so find another task");
+                getTask();
+                return;
+            }
         } catch (KeeperException e) {
-            e.printStackTrace();
+            //didn't insert successfully
+            System.out.println("error:" + e.getMessage());
+            System.out.println("cannot insert into process queue successfully so find another task");
+            getTask();
+            return;
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        //now insert into process queue successfully
+        //proceed to delete the waiting queue task
+        String path = taskAndPath[1];
+        System.out.println("deleting waiting pasth:" + path);
+        taskwaitingqueue.deletePath(path);
+        System.out.println("remove task from the waiting queue");
+        //start doing task
         String[] tasks = task.split("-");
 
         String hashword = tasks[0];
@@ -133,11 +152,18 @@ public class Worker extends Thread{
     }
 
     public void createSelfNode(){
-        String actualpath = zooKeeperConnector.createReturnPath(
-                workerGroupPath + myPath,         // Path of znode
-                null,           // Data not needed.
-                CreateMode.EPHEMERAL_SEQUENTIAL   // Znode type, set to EPHEMERAL SEQUENTIAL.
-        );
+        String actualpath = null;
+        try {
+            actualpath = zooKeeperConnector.createReturnPath(
+                    workerGroupPath + myPath,         // Path of znode
+                    null,           // Data not needed.
+                    CreateMode.EPHEMERAL_SEQUENTIAL   // Znode type, set to EPHEMERAL SEQUENTIAL.
+            );
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         System.out.println("create the worker! : " + actualpath);
         myActualPath = actualpath;

@@ -3,6 +3,7 @@ import org.apache.zookeeper.data.Stat;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -12,6 +13,7 @@ public class ZookeeperQueue {
     static CountDownLatch countDownLatch = new CountDownLatch(1);
     ZooKeeperConnector zooKeeperConnector;
     String queueName;
+    Random random = new Random();
 
     public ZookeeperQueue(String queueName, ZooKeeperConnector zooKeeperConnector) {
         this.zooKeeperConnector = zooKeeperConnector;
@@ -36,8 +38,31 @@ public class ZookeeperQueue {
         return path;
     }
 
+    public String insertWithNodeName(String data, String nodeName) throws KeeperException, InterruptedException {
+
+        String path = zooKeeperConnector.createReturnPath(queueName + "/" + nodeName, data, CreateMode.PERSISTENT);
+        return path;
+    }
+
+    public boolean exist(String node){
+        Stat stat = zooKeeperConnector.exists(queueName + "/" + node, null);
+        if(stat == null){
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
+
     public int insertAndGetSequence(){
-        String path = zooKeeperConnector.createReturnPath(queueName + "/element", "sequence", CreateMode.PERSISTENT_SEQUENTIAL);
+        String path = null;
+        try {
+            path = zooKeeperConnector.createReturnPath(queueName + "/element", "sequence", CreateMode.PERSISTENT_SEQUENTIAL);
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         return Integer.parseInt(path.substring(7+1+queueName.length()));
     }
 
@@ -108,12 +133,82 @@ public class ZookeeperQueue {
 
     public void deletePath(String path) {
         try {
-            zooKeeperConnector.getZooKeeper().delete(path, 0);
+            zooKeeperConnector.getZooKeeper().delete(path, -1);
         } catch (InterruptedException e) {
             //e.printStackTrace();
         } catch (KeeperException e) {
             //e.printStackTrace();
         }
+    }
+
+    public String[] read() {
+        Stat stat = null;
+
+        // Get the first element available
+
+
+        ArrayList<String> list = null;
+        while (list == null || list.isEmpty()) {
+            try {
+                list = (ArrayList<String>)
+                        zooKeeperConnector.getZooKeeper().getChildren(queueName, new Watcher() {
+                            @Override
+                            public void process(WatchedEvent event) {
+                                countDownLatch.countDown();
+                            }
+                        });
+            } catch (KeeperException e) {
+                //e.printStackTrace();
+            } catch (InterruptedException e) {
+                //e.printStackTrace();
+            }
+            if (list.isEmpty()) {
+                System.out.println(queueName + " queue is empty. Going to wait");
+                countDownLatch = new CountDownLatch(1);
+                try {
+                    countDownLatch.await();
+                } catch (InterruptedException e) {
+                    //e.printStackTrace();
+                }
+            }
+        }
+        //Integer min = new Integer(list.get(0).substring(7));
+        /*for (String s : list) {
+            Integer tempValue = new Integer(s.substring(7));
+            if (tempValue < min) min = tempValue;
+        }*/
+        //System.out.println("Temporary value: " + queueName + "/element" + min);
+        int r = random.nextInt(list.size());
+        String firstChild = list.get(r);
+        System.out.println("firstChild is " + firstChild);
+        byte[] b = new byte[0];
+        try {
+            b = zooKeeperConnector.getZooKeeper().getData(queueName + "/"+firstChild, null, stat);
+        } catch (KeeperException e) {
+            //e.printStackTrace();
+        } catch (InterruptedException e) {
+            //e.printStackTrace();
+        }
+
+        /*
+        try {
+            zooKeeperConnector.getZooKeeper().delete(queueName + "/"+firstChild, 0);
+        } catch (InterruptedException e) {
+            //e.printStackTrace();
+        } catch (KeeperException e) {
+            //cannot deleteData because other has deleteData it
+            //has to retry !!!!!!!!!!
+            //e.printStackTrace();
+            System.out.println("deleteData fail and try to pop again");
+            return pop();
+
+        }*/
+
+        String[] retvalue = new String[2];
+        retvalue[0]= new String(b);
+        retvalue[1] = queueName + "/" + firstChild;
+
+        return retvalue;
     }
 
 
