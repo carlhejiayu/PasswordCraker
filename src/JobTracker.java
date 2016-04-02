@@ -153,6 +153,8 @@ public class JobTracker {
             System.out.println("reset worker watcher");
             String failpath = event.getPath();
             System.out.println("event path " + failpath);
+            String failname = failpath.substring(14);
+            System.out.println("Fail Name:"+failname);
 
             Watcher.Event.EventType type = event.getType();
             System.out.println("The type of message is "+type.toString());
@@ -161,8 +163,8 @@ public class JobTracker {
                 System.out.println("Confirming Recieving a failing worker failing");
                 List<String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessQueue", null);
                 for (String eachworker : allProcessingTasks) {
-                    if (failpath.equals(eachworker)) {
-                        System.out.println("Worker "+failpath +"Fail");
+                    if (failname.equals(eachworker)) {
+                        System.out.println("Worker "+failname +"Fail");
                         String acpath = "/taskProcessQueue/" + eachworker;
                         String failpathdata = new String(zkc.getZooKeeper().getData(acpath, null, null));
                         String[] failpathd = failpathdata.split("=");
