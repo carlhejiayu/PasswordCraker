@@ -619,7 +619,7 @@ class jobRequestHandlingThread extends Thread {
                 List<String> alljobs = zkc.getZooKeeper().getChildren("/jobs", null);
                 for (String jobname : alljobs) {
                     if (jobname.equals(requestword)) {
-                        createjob = false;
+                        deleteJob(requestword);
                         return;
                     }
                 }
