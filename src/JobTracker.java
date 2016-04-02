@@ -133,11 +133,7 @@ public class JobTracker {
         try {
             System.out.println("reset worker watcher");
             zkc.getZooKeeper().getChildren("/workersGroup", workerwatcher);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        String failpath = event.getPath();
-        try {
+            String failpath = event.getPath();
             String failpathdata = new String(zkc.getZooKeeper().getData(failpath, null, null));
             String[] failpathd = failpathdata.split("=");
             String failworkername = failpathd[0];
