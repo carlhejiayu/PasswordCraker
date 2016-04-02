@@ -257,12 +257,21 @@ public class JobTracker {
                 }
             }).start();
 
+
+
             workerwatcher = new Watcher() { // Anonymous Watcher for the JobTracker Primary Purpose
                 @Override
                 public void process(WatchedEvent event) {
                     workerWatcherHandler(event);
                 }
             };
+
+            try {
+                zkc.getZooKeeper().getChildren("/workersGroup", workerwatcher);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
         }
 
     }
