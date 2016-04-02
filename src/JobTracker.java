@@ -168,7 +168,7 @@ public class JobTracker {
                     String eachworker = tasktd[0];
                     if (failname.equals(eachworker)) {
                         System.out.println("Worker "+failname +"Fail");
-                        String acpath = "/taskPrcoessQueue/" +eachTask;
+                        String acpath = "/taskProcessQueue/" +eachTask;
                        // String failpathdata = new String(zkc.getZooKeeper().getData(acpath, null, null));
                         //String[] failpathd = failpathdata.split("=");
                         String taskinfo = tasktd[1];
