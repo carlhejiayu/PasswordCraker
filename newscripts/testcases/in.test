@@ -1,0 +1,4 @@
+inject.classname=org/apache/zookeeper/ClientCnxn$EventThread
+inject.method=queueEvent
+inject.signature=(Lorg/apache/zookeeper/WatchedEvent;)V
+inject.failure.threshold=12
