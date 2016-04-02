@@ -392,6 +392,8 @@ class jobRequestHandlingThread extends Thread {
                         String message = "In progress\r\n";
                         objectOutputStream.writeBytes(message);
                     }
+
+                    return;
                 }
 
             }
@@ -576,7 +578,7 @@ class jobRequestHandlingThread extends Thread {
                 for (String jobname : alljobs) {
                     if (jobname.equals(requestword)) {
                         createjob = false;
-                        checkJobState(requestword);
+                        return;
                     }
                 }
 
