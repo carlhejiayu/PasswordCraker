@@ -24,6 +24,7 @@ public class JobTracker {
     String jobsRoot = "/jobs";
     ZooKeeperConnector zkc;
     Watcher watcher;
+    Watcher workerwatcher;
     ZookeeperQueue taskWaitingQueue;
     ZookeeperQueue taskProcessingQueue;
     ServerSocket serverSocket;
@@ -38,7 +39,7 @@ public class JobTracker {
             return;
         }
 
-        JobTracker t = new JobTracker(args[0], 7000);
+        JobTracker t = new JobTracker(args[0], 7001);
 
         t.checkpath();
 
@@ -84,6 +85,69 @@ public class JobTracker {
         };
 
     }
+    private void checkUnfinishedSplitJobs(){
+        //Check-jobs info
+        try {
+            List<String> alljobs = zkc.getZooKeeper().getChildren("/jobs",null);
+            for (String eachjob: alljobs){
+                String jobPath = "/jobs/"+ eachjob;
+                String jobinfo = new String (zkc.getZooKeeper().getData(jobPath,null,null));
+                String []jobi = jobinfo.split("-");
+                int Task_Number = Integer.parseInt(jobi[0]);
+                int Current_Number = Integer.parseInt(jobi[1]);
+                if (Task_Number != Current_Number){
+                    //that means the JobTracker fail during the process of splitting Task
+                    //we need to continue adding the Tasks
+                    for (int i = Current_Number; i <Task_Number; i ++ ){
+                        String info = eachjob + "-" + String.valueOf(i + 1) + ":" + String.valueOf(Task_Number);
+                        taskWaitingQueue.insert(info);
+                    }
+                }
+            }
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void workerWatcherHandler(WatchedEvent event) {
+        // When woker fail
+        String failpath = event.getPath();
+        try {
+            String failpathdata = new String(zkc.getZooKeeper().getData(failpath, null, null));
+            String[] failpathd = failpathdata.split("=");
+            String failworkername = failpathd[0];
+            String taskinfo = failpathd[1];
+            Watcher.Event.EventType type = event.getType();
+            if (type == Watcher.Event.EventType.NodeChildrenChanged) {
+                //One worker fail
+                List<String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessQueue", null);
+                for (String eachworker : allProcessingTasks) {
+                    if (failworkername.equals(eachworker)) {
+                        taskProcessingQueue.deletePath(failpath);
+                        taskWaitingQueue.insert(taskinfo);
+                    }
+
+                }
+            }
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+        //reset watcher
+        try {
+            zkc.getZooKeeper().getChildren("/workersGroup", workerwatcher);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+    }
 
     private void checkTaskProcessingQueue() {
         //we only look for the one
@@ -92,6 +156,7 @@ public class JobTracker {
             List<String> allworkers = zkc.getZooKeeper().getChildren("/workersGroup", null);
             for (String Tasksworkername : allProcessingTasksworker) {
                     if (allworkers.contains(Tasksworkername)){
+
 
                     }else{
                         //that means the processing Tasks is not running anymore and needed to be removed and put back to taskwaitinqueue
@@ -119,6 +184,34 @@ public class JobTracker {
 
 
     private void checkpath() {
+
+        //this one will only be created once
+        Stat jobrootsta = zkc.exists(jobsRoot, watcher);
+        if (jobrootsta == null) {
+            System.out.println("Creating " + jobsRoot);
+            KeeperException.Code ret = zkc.create(
+                    jobsRoot,         // Path of znode
+                    null,           // Data not needed.
+                    CreateMode.PERSISTENT   // Znode type, set to EPHEMERAL.
+            );
+            if (ret == KeeperException.Code.OK) System.out.println("successfully create the root for Jobs!");
+        }
+
+        //the worker path will only be created once
+        Stat workeroot = zkc.exists("/workersGroup", workerwatcher);
+        if (workeroot == null) {
+            System.out.println("Creating " + "/workersGroup");
+            KeeperException.Code ret = zkc.create(
+                    "/workersGroup",         // Path of znode
+                    null,           // Data not needed.
+                    CreateMode.PERSISTENT   // Znode type, set to EPHEMERAL.
+            );
+            if (ret == KeeperException.Code.OK) System.out.println("successfully create the root for Workers!");
+        }
+
+
+
+
         Stat stat = zkc.exists(root, watcher);
         if (stat == null) {              // znode doesn't exist; let's try creating it
             System.out.println("Creating " + root);
@@ -129,6 +222,7 @@ public class JobTracker {
             );
             if (ret == KeeperException.Code.OK) System.out.println("the boss!");
             checkTaskProcessingQueue();
+            checkUnfinishedSplitJobs();
 
             // after becoming the boss,then, we could let it perform the jobRequest function
             new Thread(new Runnable() {
@@ -143,18 +237,13 @@ public class JobTracker {
                     }
                 }
             }).start();
-        }
 
-        //this one will only be created once
-        Stat jobrootsta = zkc.exists(jobsRoot, watcher);
-        if (jobrootsta == null) {
-            System.out.println("Creating " + jobsRoot);
-            KeeperException.Code ret = zkc.create(
-                    jobsRoot,         // Path of znode
-                    null,           // Data not needed.
-                    CreateMode.PERSISTENT   // Znode type, set to EPHEMERAL.
-            );
-            if (ret == KeeperException.Code.OK) System.out.println("successfully create the root for Jobs!");
+            workerwatcher = new Watcher() { // Anonymous Watcher for the JobTracker Primary Purpose
+                @Override
+                public void process(WatchedEvent event) {
+                    workerWatcherHandler(event);
+                }
+            };
         }
 
     }
@@ -213,12 +302,7 @@ class jobRequestHandlingThread extends Thread {
             }
         };*/
 
-        workerwatcher = new Watcher() {
-            @Override
-            public void process(WatchedEvent event) {
-                workerWatcherHandler(event);
-            }
-        };
+
         try {
             zkc.getZooKeeper().getChildren("/workersGroup", workerwatcher);
         } catch (Exception e) {
@@ -227,6 +311,37 @@ class jobRequestHandlingThread extends Thread {
 
 
     }
+
+    public void deleteJob(String jobName) {
+        String path = "/jobs/" + jobName;
+        String successpath = "/jobs/" + jobName + "/success";
+        String failpath = "/jobs/" + jobName + "/notFound";
+        try {
+            List<String> children = zkc.getZooKeeper().getChildren(successpath, false);
+            for (String child : children) {
+                zkc.getZooKeeper().delete(successpath + "/" + child,-1);
+            }
+            zkc.getZooKeeper().delete(successpath, -1);
+
+            List<String> failchildren = zkc.getZooKeeper().getChildren(failpath, false);
+            for (String child : failchildren) {
+                zkc.getZooKeeper().delete(failpath + "/" + child,-1);
+            }
+            zkc.getZooKeeper().delete(failpath, -1);
+
+            zkc.getZooKeeper().delete(path,-1);
+
+        }
+        catch (KeeperException.NoNodeException e) {
+            //System.out.printf("Group %s does not exist\n", groupName);
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private void checkJobState(String requestword) {
         //we need to check whether some of the jobs have been finished during the time when it is crashed and restablish a new primary job Tracker
@@ -237,19 +352,28 @@ class jobRequestHandlingThread extends Thread {
                 if (jobname.equals(requestword)) {
                     String jobpath = "/jobs/" + jobname;
                     String jobinfo = new String(zkc.getZooKeeper().getData(jobpath, null, null));
-                    int Task_Number = Integer.parseInt(jobinfo);
+                    String [] jobi = jobinfo.split("-");
+                    int Task_Number = Integer.parseInt(jobi[0]);
                     int notFoundNumber = zkc.getZooKeeper().getChildren(jobpath + "/notFound", null).size();
-                    int successNumber = zkc.getZooKeeper().getChildren(jobpath + "/success", null).size();
+                    List <String> successelements = zkc.getZooKeeper().getChildren(jobpath + "/success", null);
+                    int successNumber = successelements.size();
+
                     if (Task_Number == notFoundNumber + successNumber) {
                         //Now we can respond to the right client
                         String message = "";
                         if (successNumber == 1) {
-                            String password = new String(zkc.getZooKeeper().getData(jobpath + "/success", null, null));
+                            Stat s = null;
+                            byte[] b=zkc.getZooKeeper().getData(jobpath + "/success/"+successelements.get(0), null, s);
+                            String password = new String(b);
                             message = "Password found:" + password + "\r\n";
                         } else {
                             message = "Failed:Password not found\r\n";
                         }
+
                         objectOutputStream.writeBytes(message);
+                        //we delete the job in the zookeeper
+                        deleteJob(jobname);
+
                     }
                     else{
                         String message = "In progress\r\n";
@@ -273,12 +397,15 @@ class jobRequestHandlingThread extends Thread {
 
 
 
-    private void splitJobs(String word, int worker_number) {
+
+    private void splitJobs(String word, int worker_number, String jobPath) {
         try {
             for (int i = 0; i < worker_number; i++) {
                 String info = "";
                 info = word + "-" + String.valueOf(i + 1) + ":" + String.valueOf(worker_number);
                 taskWaitingQueue.insert(info);
+                String jobinfo = String.valueOf(worker_number)+"-"+String.valueOf(i+1);
+                zkc.getZooKeeper().setData(jobPath,jobinfo.getBytes(),i+1);
             }
 
         } catch (Exception e) {
@@ -410,42 +537,7 @@ class jobRequestHandlingThread extends Thread {
     }*/
 
 
-    private void workerWatcherHandler(WatchedEvent event) {
-        // When woker fail
-        String failpath = event.getPath();
-        try {
-            String failpathdata = new String(zkc.getZooKeeper().getData(failpath, null, null));
-            String[] failpathd = failpathdata.split("=");
-            String failworkername = failpathd[0];
-            String taskinfo = failpathd[1];
-            Watcher.Event.EventType type = event.getType();
-            if (type == Watcher.Event.EventType.NodeChildrenChanged) {
-                //One worker fail
-                List<String> allProcessingTasks = zkc.getZooKeeper().getChildren("/taskProcessQueue", null);
-                for (String eachworker : allProcessingTasks) {
-                    if (failworkername.equals(eachworker)) {
-                        taskProcessingQueue.deletePath(failpath);
-                        taskWaitingQueue.insert(taskinfo);
-                    }
 
-                }
-            }
-        } catch (KeeperException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-
-        //reset watcher
-        try {
-            zkc.getZooKeeper().getChildren("/workersGroup", workerwatcher);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-    }
 
 
     @Override
@@ -478,14 +570,14 @@ class jobRequestHandlingThread extends Thread {
                 if (createjob) {
 
                     //Now we need to create a node for a job that request to crack the word , 'requestword'
-                    String path = "/jobs/" + requestword;
+                    String path = "/jobs/" + requestword ;
                     //Stat stat = zkc.exists(path, jobswatcher);
 
 
                     // get the number of worker
                     List workers = zkc.getZooKeeper().getChildren("/workersGroup", true);
                     int worker_number = workers.size();
-                    String jobInfo = String.valueOf(worker_number);
+                    String jobInfo = String.valueOf(worker_number) + "-0";
                     //if (stat == null) {              // znode doesn't exist; let's try creating it
                     System.out.println("Creating the job of the word: " + requestword);
                     KeeperException.Code ret = zkc.create(
@@ -502,7 +594,7 @@ class jobRequestHandlingThread extends Thread {
                     zkc.getZooKeeper().getChildren(failpath, failwatcher);
 
                     // Now we need to split the jobs and push the tasks into the Queue
-                    splitJobs(requestword, worker_number);
+                    splitJobs(requestword, worker_number,path);
                 }
             }
         } catch (IOException e) {

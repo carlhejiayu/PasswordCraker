@@ -43,7 +43,6 @@ public class FileServer {
     }
 
     private void checkpath() {
-
         Stat stat = zooKeeperConnector.exists(myPath, watcher);
 
         if (stat == null) {              // znode doesn't exist; let's try creating it
@@ -94,6 +93,7 @@ public class FileServer {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+
         // Always wrap FileReader in BufferedReader.
         BufferedReader bufferedReader =
                 new BufferedReader(fileReader);
@@ -170,6 +170,7 @@ class requestHandlingThread extends Thread{
 
             int numerator = 0;
             int denominator = 0;
+            System.out.println("request file is: " + requestfile);
             String[] s = requestfile.split(":");
             numerator = Integer.parseInt(s[0]);
             denominator = Integer.parseInt(s[1]);

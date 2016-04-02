@@ -1,0 +1,13 @@
+log4j:WARN No appenders could be found for logger (org.apache.zookeeper.ZooKeeper).
+log4j:WARN Please initialize the log4j system properly.
+java.net.BindException: Address already in use
+	at java.net.PlainSocketImpl.socketBind(Native Method)
+	at java.net.AbstractPlainSocketImpl.bind(AbstractPlainSocketImpl.java:376)
+	at java.net.ServerSocket.bind(ServerSocket.java:376)
+	at java.net.ServerSocket.<init>(ServerSocket.java:237)
+	at java.net.ServerSocket.<init>(ServerSocket.java:128)
+	at FileServer.<init>(FileServer.java:105)
+	at FileServer.main(FileServer.java:33)
+Exception in thread "Thread-0" java.lang.NullPointerException
+	at FileServer$2.run(FileServer.java:119)
+	at java.lang.Thread.run(Thread.java:745)

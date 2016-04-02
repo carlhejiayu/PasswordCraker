@@ -90,13 +90,13 @@ public class ClientDriver {
                 String path = event.getPath();
                 Event.EventType type = event.getType();
                 if(type == Event.EventType.NodeDeleted ){
-                    System.out.println("job tracker server crash, waiting for new file server");
+                    //System.out.println("job tracker server crash, waiting for new file server");
                     jobTrackerOk.set(false);
                     getJobTrackerAddress();
                 }
                 if(type == Event.EventType.NodeCreated){
                     //now backup file server up, get new address
-                    System.out.println("new job tracker server up");
+                    //System.out.println("new job tracker server up");
                     getJobTrackerAddress();
                 }
             }
@@ -109,7 +109,7 @@ public class ClientDriver {
 
                 String address = new String(b);
 
-                System.out.println("address is: " + address);
+                //System.out.println("address is: " + address);
                 IpAddress ipAddress = IpAddress.parseAddressString(address);
                 jobTrackerAddress = ipAddress;
                 socket = new Socket(jobTrackerAddress.Ip, jobTrackerAddress.port);
