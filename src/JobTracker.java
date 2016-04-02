@@ -134,10 +134,15 @@ public class JobTracker {
             System.out.println("reset worker watcher");
             zkc.getZooKeeper().getChildren("/workersGroup", workerwatcher);
             String failpath = event.getPath();
+            System.out.println("1");
             String failpathdata = new String(zkc.getZooKeeper().getData(failpath, null, null));
+            System.out.println("2");
             String[] failpathd = failpathdata.split("=");
+            System.out.println("3");
             String failworkername = failpathd[0];
+            System.out.println("4");
             String taskinfo = failpathd[1];
+            System.out.println("5");
             Watcher.Event.EventType type = event.getType();
             System.out.println("The type of message is "+type.toString());
             if (type == Watcher.Event.EventType.NodeChildrenChanged) {
