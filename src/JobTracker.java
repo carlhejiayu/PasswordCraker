@@ -134,7 +134,7 @@ public class JobTracker {
             List<String> allworkers = zkc.getZooKeeper().getChildren("/workersGroup", null);
             for (String eachworkers: allworkers){
                 //reset watchers
-                String workerpath = "/workersGroup"+ eachworkers;
+                String workerpath = "/workersGroup/"+ eachworkers;
                 zkc.getZooKeeper().exists(workerpath,workerwatcher);
             }
 
