@@ -113,6 +113,8 @@ public class JobTracker {
                     for (int i = Current_Number; i <Task_Number; i ++ ){
                         String info = eachjob + "-" + String.valueOf(i + 1) + ":" + String.valueOf(Task_Number);
                         taskWaitingQueue.insert(info);
+                        String newjobinfo = String.valueOf(Task_Number)+"-"+String.valueOf(i+1);
+                        zkc.getZooKeeper().setData(jobPath,newjobinfo.getBytes(), -1);
                     }
                 }
             }
@@ -420,7 +422,7 @@ class jobRequestHandlingThread extends Thread {
                 info = word + "-" + String.valueOf(i + 1) + ":" + String.valueOf(worker_number);
                 taskWaitingQueue.insert(info);
                 String jobinfo = String.valueOf(worker_number)+"-"+String.valueOf(i+1);
-                zkc.getZooKeeper().setData(jobPath,jobinfo.getBytes(),i+1);
+                zkc.getZooKeeper().setData(jobPath,jobinfo.getBytes(), -1);
             }
 
         } catch (Exception e) {
