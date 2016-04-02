@@ -120,7 +120,9 @@ public class Worker extends Thread{
         }
         //now insert into process queue successfully
         //proceed to delete the waiting queue task
-        taskwaitingqueue.deletePath(taskAndPath[1]);
+        String path = taskAndPath[1];
+        System.out.println("deleting waiting pasth:" + path);
+        taskwaitingqueue.deletePath(path);
         System.out.println("remove task from the waiting queue");
         //start doing task
         String[] tasks = task.split("-");

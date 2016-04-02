@@ -3,6 +3,7 @@ import org.apache.zookeeper.data.Stat;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -12,6 +13,7 @@ public class ZookeeperQueue {
     static CountDownLatch countDownLatch = new CountDownLatch(1);
     ZooKeeperConnector zooKeeperConnector;
     String queueName;
+    Random random = new Random();
 
     public ZookeeperQueue(String queueName, ZooKeeperConnector zooKeeperConnector) {
         this.zooKeeperConnector = zooKeeperConnector;
@@ -176,8 +178,8 @@ public class ZookeeperQueue {
             if (tempValue < min) min = tempValue;
         }*/
         //System.out.println("Temporary value: " + queueName + "/element" + min);
-
-        String firstChild = list.get(0);
+        int r = random.nextInt(list.size());
+        String firstChild = list.get(r);
         System.out.println("firstChild is " + firstChild);
         byte[] b = new byte[0];
         try {
@@ -204,7 +206,7 @@ public class ZookeeperQueue {
 
         String[] retvalue = new String[2];
         retvalue[0]= new String(b);
-        retvalue[1] = firstChild;
+        retvalue[1] = queueName + "/" + firstChild;
 
         return retvalue;
     }
