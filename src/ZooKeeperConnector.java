@@ -44,17 +44,17 @@ public class ZooKeeperConnector implements Watcher {
     public ZooKeeper getZooKeeper() {
         // Verify ZooKeeper's validity
         if (null == zooKeeper || !zooKeeper.getState().equals(ZooKeeper.States.CONNECTED)) {
-            throw new IllegalStateException ("ZooKeeper is not connected.");
+            throw new IllegalStateException("ZooKeeper is not connected.");
         }
         return zooKeeper;
     }
 
     protected Stat exists(String path, Watcher watch) {
 
-        Stat stat =null;
+        Stat stat = null;
         try {
             stat = zooKeeper.exists(path, watch);
-        } catch(Exception e) {
+        } catch (Exception e) {
         }
 
         return stat;
@@ -64,35 +64,31 @@ public class ZooKeeperConnector implements Watcher {
 
         try {
             byte[] byteData = null;
-            if(data != null) {
+            if (data != null) {
                 byteData = data.getBytes();
             }
             zooKeeper.create(path, byteData, acl, mode);
 
-        } catch(KeeperException e) {
+        } catch (KeeperException e) {
             return e.code();
-        } catch(Exception e) {
+        } catch (Exception e) {
             return KeeperException.Code.SYSTEMERROR;
         }
 
         return KeeperException.Code.OK;
     }
 
-    protected String createReturnPath(String path, String data, CreateMode mode) {
+    protected String createReturnPath(String path, String data, CreateMode mode) throws KeeperException, InterruptedException {
 
-        try {
-            byte[] byteData = null;
-            if(data != null) {
-                byteData = data.getBytes();
-            }
-            String actualpath = zooKeeper.create(path, byteData, acl, mode);
-            return actualpath;
 
-        } catch(KeeperException e) {
-            return null;
-        } catch(Exception e) {
-            return null;
+        byte[] byteData = null;
+        if (data != null) {
+            byteData = data.getBytes();
         }
+        String actualpath = zooKeeper.create(path, byteData, acl, mode);
+        return actualpath;
+
+
     }
 
     @Override
