@@ -630,7 +630,6 @@ class jobRequestHandlingThread extends Thread {
                 for (String jobname : alljobs) {
                     if (jobname.equals(requestword)) {
                         deleteJob(requestword);
-                        return;
                     }
                 }
 
