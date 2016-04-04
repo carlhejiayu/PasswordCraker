@@ -62,30 +62,32 @@ public class Worker extends Thread{
         taskProcessQueue = new ZookeeperQueue(processQueue, zooKeeperConnector);
         //taskProcessQueue.tryCreate();
     }
-    public void doTask(String hashword, List<String> dictionary){
+    public void doTask(String hashword, String task, List<String> dictionary){
         System.out.println("start doing task:" + hashword);
         for(String word : dictionary){
             String hash = MD5Hash.getHash(word);
             if(hash.equals(hashword)){
                 //success
-                report(word, hashword, true);
+                report(word, hashword, task, true);
                 return;
             }
         }
-        report("notFound", hashword, false);
+        report("notFound", hashword, task, false);
     }
 
-    public void report(String answer, String task, boolean success){
+    public void report(String answer, String hashword, String task, boolean success){
         ZookeeperQueue reportQueue = null;
         System.out.println("start to report:" + answer + " for " + task);
         if (success) {
-            reportQueue = new ZookeeperQueue("jobs/" + task + "/success", zooKeeperConnector);
+            reportQueue = new ZookeeperQueue("jobs/" + hashword + "/success", zooKeeperConnector);
         }
         else {
-            reportQueue = new ZookeeperQueue("jobs/" + task + "/notFound", zooKeeperConnector);
+            reportQueue = new ZookeeperQueue("jobs/" + hashword + "/notFound", zooKeeperConnector);
         }
         try {
-            reportQueue.insert(answer);
+            if(! reportQueue.exist(task)) {
+                reportQueue.insertWithNodeName(answer, task);
+            }
         } catch (KeeperException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -130,7 +132,7 @@ public class Worker extends Thread{
         String hashword = tasks[0];
         String partitionId = tasks[1];
         List dict = getFileFromFileServer(partitionId);
-        doTask(hashword, dict);
+        doTask(hashword, task, dict);
         taskProcessQueue.deletePath(processPath);
         System.out.println("remove task from the process queue");
     }
