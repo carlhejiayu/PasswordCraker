@@ -181,6 +181,8 @@ public class ZookeeperQueue {
         int r = random.nextInt(list.size());
         String firstChild = list.get(r);
         System.out.println("firstChild is " + firstChild);
+        //do not need to read data again since name is task now
+        /*
         byte[] b = new byte[0];
         try {
             b = zooKeeperConnector.getZooKeeper().getData(queueName + "/"+firstChild, null, stat);
@@ -188,7 +190,7 @@ public class ZookeeperQueue {
             //e.printStackTrace();
         } catch (InterruptedException e) {
             //e.printStackTrace();
-        }
+        }*/
 
         /*
         try {
@@ -205,7 +207,7 @@ public class ZookeeperQueue {
         }*/
 
         String[] retvalue = new String[2];
-        retvalue[0]= new String(b);
+        retvalue[0]= firstChild;
         retvalue[1] = queueName + "/" + firstChild;
 
         return retvalue;

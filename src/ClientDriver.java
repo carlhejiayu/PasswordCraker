@@ -22,14 +22,15 @@ public class ClientDriver {
     DataOutputStream output;
     Socket socket;
     String selfname;
+
     public ClientDriver(String zookeeperHost) {
         jobTrackerOk = new AtomicBoolean(false);
         zooKeeperConnector = new ZooKeeperConnector();
         //connect to zookeeper
         try {
             zooKeeperConnector.connect(zookeeperHost);
-        } catch(Exception e) {
-            System.out.println("Zookeeper connect error: "+ e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Zookeeper connect error: " + e.getMessage());
         }
 
     }
@@ -42,17 +43,17 @@ public class ClientDriver {
         ClientDriver client = new ClientDriver(zkHost);
         client.getJobTrackerAddress();
 
-        if(type.equals("job")){
-          String password = parameter;
+        if (type.equals("job")) {
+            String password = parameter;
 
-          while(client.jobTrackerOk.get() == false){
-            //wait for it to be reconnect
-          }
-          client.sendJob(password);
+            while (client.jobTrackerOk.get() == false) {
+                //wait for it to be reconnect
+            }
+            client.sendJob(password);
 
-        }
-        else if(type.equals("status")){
-            while(client.jobTrackerOk.get() == false){
+
+        } else if (type.equals("status")) {
+            while (client.jobTrackerOk.get() == false) {
                 //wait for it to be reconnect
             }
             String status = client.checkStatus(parameter);
@@ -65,7 +66,8 @@ public class ClientDriver {
             e.printStackTrace();
         }
     }
-    public String checkStatus(String request){
+
+    public String checkStatus(String request) {
         try {
             output.writeBytes("status-" + request + "\r\n");
             String answer = input.readLine();
@@ -77,36 +79,48 @@ public class ClientDriver {
         return null;
 
     }
-    public void sendJob(String password){
+
+    public void sendJob(String password) {
         try {
 
             output.writeBytes("job-" + password + "\r\n");
-
+            /*try {
+                String success = input.readLine();
+                if (success.equals("posted")) {
+                    return;
+                }
+            }catch (Exception e){
+                System.out.println("try to send job but fail retry");
+                while (jobTrackerOk.get() == false) {
+                    //wait for it to be reconnect
+                }
+                sendJob(password);
+            }*/
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    //todo: reconnect to the job tracker B send with my name
-    public void getJobTrackerAddress(){
+
+    public void getJobTrackerAddress() {
         Stat stat = zooKeeperConnector.exists("/JobTracker", new Watcher() {
             @Override
             public void process(WatchedEvent event) {
                 //handle file server failure
                 String path = event.getPath();
                 Event.EventType type = event.getType();
-                if(type == Event.EventType.NodeDeleted ){
+                if (type == Event.EventType.NodeDeleted) {
                     //System.out.println("job tracker server crash, waiting for new file server");
                     jobTrackerOk.set(false);
                     getJobTrackerAddress();
                 }
-                if(type == Event.EventType.NodeCreated){
+                if (type == Event.EventType.NodeCreated) {
                     //now backup file server up, get new address
                     //System.out.println("new job tracker server up");
                     getJobTrackerAddress();
                 }
             }
         });
-        if(stat != null){
+        if (stat != null) {
             stat = null;
             try {
                 byte[] b = zooKeeperConnector.getZooKeeper().getData("/JobTracker", null, stat);
